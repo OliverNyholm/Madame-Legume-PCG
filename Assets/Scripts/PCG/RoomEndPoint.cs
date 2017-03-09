@@ -2,23 +2,23 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RoomEndPoint : MonoBehaviour {
+public class RoomEndPoint : MonoBehaviour
+{
 
-    //[SerializeField]
-    //private Vector2 startPosition;
-
-    //[SerializeField]
-    //private Vector2 endPosition;
+    [SerializeField]
+    List<Transform> spikeSpawnPositions = new List<Transform>();
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         //startPosition = transform.Find("StartPoint").transform.position;
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+
+    }
 
     public Vector2 GetStartPosition()
     {
@@ -32,12 +32,17 @@ public class RoomEndPoint : MonoBehaviour {
 
     public float GetObjectWidth()
     {
-        
-        return Mathf.Abs(transform.Find("EndPoint").transform.position.x - transform.Find("StartPoint").transform.position.x); 
+
+        return Mathf.Abs(transform.Find("EndPoint").transform.position.x - transform.Find("StartPoint").transform.position.x);
     }
 
     public float GetObjectHeight()
     {
         return Mathf.Abs(transform.Find("EndPoint").transform.position.y - transform.Find("StartPoint").transform.position.y);
+    }
+
+    public Transform getSpikePosition(int index)
+    {
+        return spikeSpawnPositions[index];
     }
 }

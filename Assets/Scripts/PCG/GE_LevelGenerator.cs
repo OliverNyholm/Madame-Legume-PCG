@@ -13,13 +13,22 @@ public class GE_LevelGenerator : MonoBehaviour
     }
 
     [SerializeField]
-    private GameObject[] rooms;
+    private GameObject[] platforms;
 
     [SerializeField]
     private GameObject[] fruits;
 
     [SerializeField]
     private GameObject[] frames;
+
+    [SerializeField]
+    private GameObject spike;
+
+    [SerializeField]
+    private int spikeChance;
+
+    [SerializeField]
+    private GameObject character;
 
     private TileType[][] tiles;
 
@@ -30,12 +39,14 @@ public class GE_LevelGenerator : MonoBehaviour
     private string[] oRHS;
     private string[] fRHS;
 
-
     private int width, height;
     private float widthOffset, heightOffset;
     private Random random = new Random();
 
     private Vector2 startPosition;
+    private Vector2 startPlatformEndPoint, endPlatformPosition;
+
+    private List<GameObject> instantiatedObjects = new List<GameObject>();
 
     private GameObject boardHolder;
 
@@ -47,11 +58,14 @@ public class GE_LevelGenerator : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        character = GameObject.Find("Player");
+
+
         boardHolder = new GameObject("BoardHolder");
         width = 30;
         height = 25;
-        widthOffset = rooms[1].GetComponent<RoomEndPoint>().GetObjectWidth();
-        heightOffset = rooms[2].GetComponent<RoomEndPoint>().GetObjectHeight();
+        widthOffset = platforms[1].GetComponent<RoomEndPoint>().GetObjectWidth();
+        heightOffset = platforms[2].GetComponent<RoomEndPoint>().GetObjectHeight();
         InstantiateOuterWalls();
 
         oRHS = new string[3];
@@ -68,17 +82,44 @@ public class GE_LevelGenerator : MonoBehaviour
 
         ReadLHS();
         BuildLevel();
-
+        CalculateFitness();
         Debug.Log(lhs);
     }
 
-        // Update is called once per frame
-        void Update()
+    void GenerateLevel()
+    {
+        foreach (GameObject o in instantiatedObjects)
+        {
+            Destroy(o);
+        }
+        instantiatedObjects.Clear();
+        lhs = "SOFE";
+        ReadLHS();
+        BuildLevel();
+        CalculateFitness();
+        Debug.Log(lhs);
+    }
+
+    public Vector2 GetStartPosition()
+    {
+        return startPosition;
+    }
+
+    // Update is called once per frame
+    void Update()
     {
         if (Input.GetKeyDown(KeyCode.Return))
         {
             ClearConsole();
-            SceneManager.LoadScene("PCG_Level");
+            GenerateLevel();
+            //SceneManager.LoadScene("PCG_Level");
+        }
+
+        if (Input.GetKeyDown(KeyCode.Backspace))
+        {
+            character.transform.position = startPosition;//Instantiate(character, startPosition, character.transform.rotation);
+            Camera camera = GameObject.Find("Main Camera").GetComponent<Camera>();
+            camera.enabled = false;
         }
     }
 
@@ -155,21 +196,32 @@ public class GE_LevelGenerator : MonoBehaviour
         {
             Vector2 randomStartPosition;
 
-            if(lhs[i] == 'S')
+            if (lhs[i] == 'S')
             {
                 randomStartPosition = new Vector2(leftEdgeX, Random.Range(topEdgeY - heightOffset, bottomEdgeY + 1)); //+ 1 for frame offset
-                GameObject o = Instantiate(rooms[0], randomStartPosition + getObjectOffset(lhs[i]), rooms[0].transform.rotation);
+                GameObject o = Instantiate(platforms[0], randomStartPosition + getObjectOffset(lhs[i]), platforms[0].transform.rotation);
+                instantiatedObjects.Add(o);
+                startPosition = randomStartPosition + new Vector2(1, 1);
+                startPlatformEndPoint = o.GetComponent<RoomEndPoint>().GetEndPosition();
             }
             #region Platforms
             if (lhs[i] == '1')
             {
                 randomStartPosition = new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY - heightOffset, bottomEdgeY + 1)); //+ 1 for frame offset
-                GameObject o = Instantiate(rooms[1], randomStartPosition + getObjectOffset(lhs[i]), rooms[1].transform.rotation);
+                GameObject o = Instantiate(platforms[1], randomStartPosition + getObjectOffset(lhs[i]), platforms[1].transform.rotation);
+                instantiatedObjects.Add(o);
+
+                if (Random.Range(0, 11) < 5)
+                    AddSpikes(o, 0, new List<int>());
             }
             if (lhs[i] == '2')
             {
                 randomStartPosition = new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY, bottomEdgeY + heightOffset)); //+ 1 for frame offset
-                GameObject o = Instantiate(rooms[2], randomStartPosition + getObjectOffset(lhs[i]), rooms[2].transform.rotation);
+                GameObject o = Instantiate(platforms[2], randomStartPosition + getObjectOffset(lhs[i]), platforms[2].transform.rotation);
+                instantiatedObjects.Add(o);
+
+                if (Random.Range(0, 11) < 5)
+                    AddSpikes(o, 0, new List<int>());
             }
             #endregion
 
@@ -178,36 +230,108 @@ public class GE_LevelGenerator : MonoBehaviour
             {
                 randomStartPosition = new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY, bottomEdgeY + heightOffset));
                 GameObject o = Instantiate(fruits[0], randomStartPosition + getObjectOffset(lhs[i]), fruits[0].transform.rotation);
+                instantiatedObjects.Add(o);
+
             }
             if (lhs[i] == 'T')
             {
                 randomStartPosition = new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY, bottomEdgeY + heightOffset));
                 GameObject o = Instantiate(fruits[1], randomStartPosition + getObjectOffset(lhs[i]), fruits[1].transform.rotation);
+                instantiatedObjects.Add(o);
+
             }
             if (lhs[i] == 'B')
             {
                 randomStartPosition = new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY, bottomEdgeY + heightOffset));
                 GameObject o = Instantiate(fruits[2], randomStartPosition + getObjectOffset(lhs[i]), fruits[2].transform.rotation);
+                instantiatedObjects.Add(o);
+
             }
             #endregion
 
             if (lhs[i] == 'E')
             {
                 randomStartPosition = new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY - heightOffset, bottomEdgeY + 1)); //+ 1 for frame offset
-                GameObject o = Instantiate(rooms[3], randomStartPosition + getObjectOffset(lhs[i]), rooms[3].transform.rotation);
+                GameObject o = Instantiate(platforms[3], randomStartPosition + getObjectOffset(lhs[i]), platforms[3].transform.rotation);
+                instantiatedObjects.Add(o);
+
+                endPlatformPosition = o.GetComponentInChildren<Transform>().FindChild("End").position;
             }
         }
+    }
+
+    void AddSpikes(GameObject platform, int spikeCount, List<int> spikePositionsCreated)
+    {
+        List<int> spikePositionsList = spikePositionsCreated;
+        if (Random.Range(0, 11) < spikeChance && spikeCount != 14)
+        {
+            int spikePosition = Random.Range(0, 14);
+            while (spikePositionsList.Contains(spikePosition))
+                spikePosition = Random.Range(0, 14);
+
+            GameObject o = Instantiate(spike, platform.GetComponent<RoomEndPoint>().getSpikePosition(spikePosition).position, platform.GetComponent<RoomEndPoint>().getSpikePosition(spikePosition).rotation);
+            instantiatedObjects.Add(o);
+
+            spikeCount++;
+            spikePositionsList.Add(spikePosition);
+            AddSpikes(platform, spikeCount, spikePositionsList);
+        }
+    }
+
+    float CanRaycastToEnd()
+    {        
+        float rayLength = Vector2.Distance(startPlatformEndPoint, endPlatformPosition);
+        Vector2 direction = endPlatformPosition - startPlatformEndPoint;
+        RaycastHit2D ray = Physics2D.Raycast(startPlatformEndPoint, direction, rayLength);
+        Debug.DrawRay(startPlatformEndPoint, direction, Color.red, 1);
+
+        if (ray.collider.name == "End")
+        {
+            return 0.7f;
+        }
+        return 1f;
+    }
+
+    float CheckStartEndDistance()
+    {
+        float distance = Vector2.Distance(startPlatformEndPoint, endPlatformPosition);
+
+        if (distance <= 6)
+        {
+            return 0.4f;
+        }
+
+        return 1f;
+    }
+
+    float CheckEndHeightPosition()
+    {
+        float distance = startPlatformEndPoint.y - (endPlatformPosition.y + 2);
+
+        if (lhs.Contains("B") && !lhs.Contains("C") && !lhs.Contains("T") && distance < 0 )
+        {
+            return 0.2f;
+        }
+        return 1f;
+    }
+
+    float CalculateFitness()
+    {
+        float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd();
+
+        Debug.Log(fitness);
+        return fitness;
     }
 
     Vector2 getObjectOffset(char index)
     {
         if (index == 'S' || index == '1' || index == 'E')
         {
-            return new Vector2(rooms[0].GetComponent<RoomEndPoint>().GetObjectWidth() / 2, 0);
+            return new Vector2(platforms[0].GetComponent<RoomEndPoint>().GetObjectWidth() / 2, 0);
         }
         else if (index == '2')
         {
-            return new Vector2(0, -rooms[2].GetComponent<RoomEndPoint>().GetObjectHeight() / 2);
+            return new Vector2(0, -platforms[2].GetComponent<RoomEndPoint>().GetObjectHeight() / 2);
         }
 
         else if (index == 'C')
