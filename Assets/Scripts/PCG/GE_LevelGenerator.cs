@@ -315,29 +315,42 @@ public class GE_LevelGenerator : MonoBehaviour
         return 1f;
     }
 
-    float CheckPlayability(PolygonCollider2D next, List<bool> visitedList, ref bool endFound)
+    float CheckPlayability(GameObject next, List<bool> visitedList, ref bool endFound)
     {
-        //PolygonCollider2D current = next;
+        GameObject current = next;
 
-        //for (int i = 0; i < instantiatedObjects.Count; i++)
-        //{
-        //    if (endFound)
-        //        break;
+        for (int i = 0; i < instantiatedObjects.Count; i++)
+        {
+            if (endFound)
+                break;
 
-        //    if (current.bounds.Intersects(instantiatedObjects[i].GetComponentInChildren<BoxCollider2D>().bounds) && current != instantiatedObjects[i] && !visitedList[i])
-        //    {
-        //        if (instantiatedObjects[i].GetComponentInParent<Transform>().gameObject.name == "RoomFinish")
-        //        {
-        //            endFound = true;
-        //            return 1;
-        //        }
-        //        current = instantiatedObjects[i].GetComponentInChildren<PolygonCollider2D>();
-        //        visitedList[i] = true;
-        //        CheckPlayability(current, visitedList, ref endFound);
-        //    }
-        //}
-        //if (endFound)
-        //    return 1;
+
+            if (current != instantiatedObjects[i] && current.name == "Start(Clone)" && current.GetComponentInChildren<RaycastPlayability>().isRayHittingPlatform(instantiatedObjects[i]))
+            {
+                if (instantiatedObjects[i].GetComponentInParent<Transform>().gameObject.name == "RoomFinish")
+                {
+                    endFound = true;
+                    return 1;
+                }
+                current = instantiatedObjects[i];
+                visitedList[i] = true;
+                CheckPlayability(current, visitedList, ref endFound);
+            }
+
+            //if (current.bounds.Intersects(instantiatedObjects[i].GetComponentInChildren<BoxCollider2D>().bounds) && current != instantiatedObjects[i] && !visitedList[i])
+            //{
+            //    if (instantiatedObjects[i].GetComponentInParent<Transform>().gameObject.name == "RoomFinish")
+            //    {
+            //        endFound = true;
+            //        return 1;
+            //    }
+            //    current = instantiatedObjects[i].GetComponentInChildren<PolygonCollider2D>();
+            //    visitedList[i] = true;
+            //    CheckPlayability(current, visitedList, ref endFound);
+            //}
+        }
+        if (endFound)
+            return 1;
         return 0f;
     }
 
@@ -350,7 +363,7 @@ public class GE_LevelGenerator : MonoBehaviour
             visited.Add(false);
         }
         visited[0] = true;
-        float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd() + 100 * CheckPlayability(instantiatedObjects[0].GetComponentInChildren<PolygonCollider2D>(), visited, ref endFound);
+        float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd() + 100 * CheckPlayability(instantiatedObjects[0], visited, ref endFound);
 
         Debug.Log(fitness);
         return fitness;

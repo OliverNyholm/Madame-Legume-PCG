@@ -52,8 +52,8 @@ public class MovableBanana : MonoBehaviour
             polyColl.enabled = false;
             transform.position = newposition;
         }
-        else
-            polyColl.enabled = true;
+        //else
+            //polyColl.enabled = true;
     }
 
     void OnTriggerEnter2D(Collider2D other)
