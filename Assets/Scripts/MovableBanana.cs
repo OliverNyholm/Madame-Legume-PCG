@@ -9,6 +9,7 @@ public class MovableBanana : MonoBehaviour
     EdgeCollider2D childCollider;
     SpriteRenderer renderer;
     private int previewLayer = 2; //Ingore Raycast layer
+    public PolygonCollider2D polyColl;
     bool moving;
     bool colliding;
 
@@ -48,9 +49,11 @@ public class MovableBanana : MonoBehaviour
         {
             Vector3 mousePos = new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10);
             Vector3 newposition = Camera.main.ScreenToWorldPoint(mousePos) + offset;
-
+            polyColl.enabled = false;
             transform.position = newposition;
         }
+        else
+            polyColl.enabled = true;
     }
 
     void OnTriggerEnter2D(Collider2D other)

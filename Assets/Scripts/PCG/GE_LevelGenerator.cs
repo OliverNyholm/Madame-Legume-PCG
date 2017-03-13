@@ -33,11 +33,13 @@ public class GE_LevelGenerator : MonoBehaviour
     private TileType[][] tiles;
 
     private RoomEndPoint roomEndPoint;
+    private EvolutionManager evolutionManager;
 
     private GameObject start;
     private string lhs;
     private string[] oRHS;
     private string[] fRHS;
+    private float fitness;
 
     private int width, height;
     private float widthOffset, heightOffset;
@@ -58,8 +60,8 @@ public class GE_LevelGenerator : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        evolutionManager = GetComponent<EvolutionManager>();
         character = GameObject.Find("Player");
-
 
         boardHolder = new GameObject("BoardHolder");
         width = 30;
@@ -80,10 +82,7 @@ public class GE_LevelGenerator : MonoBehaviour
         fRHS[2] = "B";
         fRHS[3] = "f";
 
-        ReadLHS();
-        BuildLevel();
-        CalculateFitness();
-        Debug.Log(lhs);
+        GenerateLevel();
     }
 
     void GenerateLevel()
@@ -96,7 +95,8 @@ public class GE_LevelGenerator : MonoBehaviour
         lhs = "SOFE";
         ReadLHS();
         BuildLevel();
-        CalculateFitness();
+        fitness = CalculateFitness();
+        evolutionManager.InsertLevelData(lhs, instantiatedObjects, fitness);
         Debug.Log(lhs);
     }
 
@@ -279,7 +279,7 @@ public class GE_LevelGenerator : MonoBehaviour
     }
 
     float CanRaycastToEnd()
-    {        
+    {
         float rayLength = Vector2.Distance(startPlatformEndPoint, endPlatformPosition);
         Vector2 direction = endPlatformPosition - startPlatformEndPoint;
         RaycastHit2D ray = Physics2D.Raycast(startPlatformEndPoint, direction, rayLength);
@@ -308,16 +308,49 @@ public class GE_LevelGenerator : MonoBehaviour
     {
         float distance = startPlatformEndPoint.y - (endPlatformPosition.y + 2);
 
-        if (lhs.Contains("B") && !lhs.Contains("C") && !lhs.Contains("T") && distance < 0 )
+        if (lhs.Contains("B") && !lhs.Contains("C") && !lhs.Contains("T") && distance < 0)
         {
             return 0.2f;
         }
         return 1f;
     }
 
+    float CheckPlayability(PolygonCollider2D next, List<bool> visitedList, ref bool endFound)
+    {
+        PolygonCollider2D current = next;
+
+        for (int i = 0; i < instantiatedObjects.Count; i++)
+        {
+            if (endFound)
+                break;
+
+            if (current.bounds.Intersects(instantiatedObjects[i].GetComponentInChildren<BoxCollider2D>().bounds) && current != instantiatedObjects[i] && !visitedList[i])
+            {
+                if (instantiatedObjects[i].GetComponentInParent<Transform>().gameObject.name == "RoomFinish")
+                {
+                    endFound = true;
+                    return 1;
+                }
+                current = instantiatedObjects[i].GetComponentInChildren<PolygonCollider2D>();
+                visitedList[i] = true;
+                CheckPlayability(current, visitedList, ref endFound);
+            }
+        }
+        if (endFound)
+            return 1;
+        return 0f;
+    }
+
     float CalculateFitness()
     {
-        float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd();
+        bool endFound = false;
+        List<bool> visited = new List<bool>();
+        for (int i = 0; i < instantiatedObjects.Count; i++)
+        {
+            visited.Add(false);
+        }
+        visited[0] = true;
+        float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd() + 100 * CheckPlayability(instantiatedObjects[0].GetComponentInChildren<PolygonCollider2D>(), visited, ref endFound);
 
         Debug.Log(fitness);
         return fitness;
@@ -348,6 +381,12 @@ public class GE_LevelGenerator : MonoBehaviour
         }
 
         return new Vector2(0, 0);
+    }
+
+    void CheckProjection(GameObject o)
+    {
+        PolygonCollider2D temp = o.GetComponent<PolygonCollider2D>();
+        //temp.points.
     }
 
     void InstantiateOuterWalls()
