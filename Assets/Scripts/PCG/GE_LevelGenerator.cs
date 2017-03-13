@@ -118,8 +118,8 @@ public class GE_LevelGenerator : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Backspace))
         {
             character.transform.position = startPosition;//Instantiate(character, startPosition, character.transform.rotation);
-            Camera camera = GameObject.Find("Main Camera").GetComponent<Camera>();
-            camera.enabled = false;
+            GameObject camera = GameObject.Find("Main Camera");
+            camera.SetActive(false);
         }
     }
 
@@ -317,27 +317,27 @@ public class GE_LevelGenerator : MonoBehaviour
 
     float CheckPlayability(PolygonCollider2D next, List<bool> visitedList, ref bool endFound)
     {
-        PolygonCollider2D current = next;
+        //PolygonCollider2D current = next;
 
-        for (int i = 0; i < instantiatedObjects.Count; i++)
-        {
-            if (endFound)
-                break;
+        //for (int i = 0; i < instantiatedObjects.Count; i++)
+        //{
+        //    if (endFound)
+        //        break;
 
-            if (current.bounds.Intersects(instantiatedObjects[i].GetComponentInChildren<BoxCollider2D>().bounds) && current != instantiatedObjects[i] && !visitedList[i])
-            {
-                if (instantiatedObjects[i].GetComponentInParent<Transform>().gameObject.name == "RoomFinish")
-                {
-                    endFound = true;
-                    return 1;
-                }
-                current = instantiatedObjects[i].GetComponentInChildren<PolygonCollider2D>();
-                visitedList[i] = true;
-                CheckPlayability(current, visitedList, ref endFound);
-            }
-        }
-        if (endFound)
-            return 1;
+        //    if (current.bounds.Intersects(instantiatedObjects[i].GetComponentInChildren<BoxCollider2D>().bounds) && current != instantiatedObjects[i] && !visitedList[i])
+        //    {
+        //        if (instantiatedObjects[i].GetComponentInParent<Transform>().gameObject.name == "RoomFinish")
+        //        {
+        //            endFound = true;
+        //            return 1;
+        //        }
+        //        current = instantiatedObjects[i].GetComponentInChildren<PolygonCollider2D>();
+        //        visitedList[i] = true;
+        //        CheckPlayability(current, visitedList, ref endFound);
+        //    }
+        //}
+        //if (endFound)
+        //    return 1;
         return 0f;
     }
 
