@@ -283,7 +283,7 @@ public class GE_LevelGenerator : MonoBehaviour
         float rayLength = Vector2.Distance(startPlatformEndPoint, endPlatformPosition);
         Vector2 direction = endPlatformPosition - startPlatformEndPoint;
         RaycastHit2D ray = Physics2D.Raycast(startPlatformEndPoint, direction, rayLength);
-        Debug.DrawRay(startPlatformEndPoint, direction, Color.red, 1);
+        Debug.DrawRay(startPlatformEndPoint, direction, Color.cyan, 1);
 
         if (ray.collider.name == "End")
         {
@@ -325,9 +325,10 @@ public class GE_LevelGenerator : MonoBehaviour
                 break;
 
 
-            if (current != instantiatedObjects[i] && current.name == "Start(Clone)" && current.GetComponentInChildren<RaycastPlayability>().isRayHittingPlatform(instantiatedObjects[i]))
+            if (current != instantiatedObjects[i] && instantiatedObjects[i].tag != "Blade" && current.GetComponentInChildren<RaycastPlayability>().isRayHittingPlatform(instantiatedObjects[i]))
             {
-                if (instantiatedObjects[i].GetComponentInParent<Transform>().gameObject.name == "RoomFinish")
+                Debug.Log("Nuu, jävlar: " + i);
+                if (instantiatedObjects[i].GetComponentInParent<Transform>().gameObject.tag == "End")
                 {
                     endFound = true;
                     return 1;
@@ -363,7 +364,7 @@ public class GE_LevelGenerator : MonoBehaviour
             visited.Add(false);
         }
         visited[0] = true;
-        float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd() + 100 * CheckPlayability(instantiatedObjects[0], visited, ref endFound);
+        float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd(); // + 100 * CheckPlayability(instantiatedObjects[0], visited, ref endFound);
 
         Debug.Log(fitness);
         return fitness;
