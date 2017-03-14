@@ -30,6 +30,8 @@ public class GE_LevelGenerator : MonoBehaviour
     [SerializeField]
     private GameObject character;
 
+    private GameObject mainCamera;
+
     private TileType[][] tiles;
 
     private RoomEndPoint roomEndPoint;
@@ -60,8 +62,10 @@ public class GE_LevelGenerator : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        mainCamera = GameObject.Find("Main Camera");
         evolutionManager = GetComponent<EvolutionManager>();
         character = GameObject.Find("Player");
+        character.GetComponentInChildren<Camera>().enabled = false;
 
         boardHolder = new GameObject("BoardHolder");
         width = 30;
@@ -112,14 +116,18 @@ public class GE_LevelGenerator : MonoBehaviour
         {
             ClearConsole();
             GenerateLevel();
+
+            mainCamera.SetActive(true);
+            
             //SceneManager.LoadScene("PCG_Level");
         }
 
         if (Input.GetKeyDown(KeyCode.Backspace))
         {
             character.transform.position = startPosition;//Instantiate(character, startPosition, character.transform.rotation);
-            GameObject camera = GameObject.Find("Main Camera");
-            camera.SetActive(false);
+            //GameObject camera = GameObject.Find("Main Camera");
+            character.GetComponentInChildren<Camera>().enabled = true;
+            mainCamera.SetActive(false);
         }
     }
 

@@ -35,7 +35,7 @@ public class RaycastPlayability : MonoBehaviour
         endBottomRight = getChildGameObject(gameObject, "BottomRight").transform.position;
         endBottomLeft = getChildGameObject(gameObject, "BottomLeft").transform.position;
 
-        isCheckingPlayability = true;
+        isCheckingPlayability = false;
     }
 
     // Update is called once per frame
