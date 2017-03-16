@@ -97,6 +97,7 @@ public class GE_LevelGenerator : MonoBehaviour
             Destroy(o);
         }
         instantiatedObjects.Clear();
+        fitness = 0;
         lhs = "SOFE";
         ReadLHS();
         BuildLevel();
@@ -113,17 +114,17 @@ public class GE_LevelGenerator : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Return))
+        if (Input.GetKeyDown(KeyCode.Return)) //Generate new level
         {
             ClearConsole();
             GenerateLevel();
 
             mainCamera.SetActive(true);
-            
+
             //SceneManager.LoadScene("PCG_Level");
         }
 
-        if (Input.GetKeyDown(KeyCode.Backspace))
+        if (Input.GetKeyDown(KeyCode.Backspace)) //Jump into level with player
         {
             character.transform.position = startPosition;//Instantiate(character, startPosition, character.transform.rotation);
             //GameObject camera = GameObject.Find("Main Camera");
@@ -131,7 +132,7 @@ public class GE_LevelGenerator : MonoBehaviour
             mainCamera.SetActive(false);
         }
 
-        if (Input.GetKeyDown(KeyCode.P))
+        if (Input.GetKeyDown(KeyCode.P)) //
         {
             bool endFound = false;
             List<bool> visited = new List<bool>();
@@ -142,6 +143,8 @@ public class GE_LevelGenerator : MonoBehaviour
             visited[0] = true;
             float temp = CheckPlayability(instantiatedObjects[0], visited, ref endFound);
             Debug.Log("CheckPlayability: " + temp);
+
+            CheckVegetablesUsed(visited);
         }
     }
 
@@ -337,17 +340,25 @@ public class GE_LevelGenerator : MonoBehaviour
         return 1f;
     }
 
+    /// <summary>
+    /// Checks if it is possible to move from start to end with raycasting. DFS through all instatiated objects
+    /// </summary>
+    /// <param name="next"> Next instatiated object to raycast from</param>
+    /// <param name="visitedList">List checking which locations have been visited previously</param>
+    /// <param name="endFound">Reference bool checking if end has been found</param>
+    /// <returns>Return 1 if endFound, else 0</returns>
     float CheckPlayability(GameObject next, List<bool> visitedList, ref bool endFound)
     {
         GameObject current = next;
 
-        for (int i = 0; i < instantiatedObjects.Count; i++)
+        for (int i = instantiatedObjects.Count - 1; i > 0; i--) //Gå bakåt i loopen, för att kolla om man kommer åt endpos direkt
         {
             if (endFound)
-                break;
+                return 1;
 
-            if (current != instantiatedObjects[i] && instantiatedObjects[i].tag != "Blade" && !visitedList[i] &&  current.GetComponentInChildren<RaycastPlayability>().isRayHittingPlatform(instantiatedObjects[i]))
+            if (current != instantiatedObjects[i] && instantiatedObjects[i].tag != "Blade" && !visitedList[i] && current.GetComponentInChildren<RaycastPlayability>().isRayHittingPlatform(instantiatedObjects[i]))
             {
+                current.GetComponentInChildren<RaycastPlayability>().isCheckingPlayability = true; //Draws the rays hit
                 if (instantiatedObjects[i].GetComponentInParent<Transform>().gameObject.tag == "End")
                 {
                     Debug.Log("Found End");
@@ -356,23 +367,37 @@ public class GE_LevelGenerator : MonoBehaviour
                 }
                 visitedList[i] = true;
                 CheckPlayability(instantiatedObjects[i], visitedList, ref endFound);
-            }
 
-            //if (current.bounds.Intersects(instantiatedObjects[i].GetComponentInChildren<BoxCollider2D>().bounds) && current != instantiatedObjects[i] && !visitedList[i])
-            //{
-            //    if (instantiatedObjects[i].GetComponentInParent<Transform>().gameObject.name == "RoomFinish")
-            //    {
-            //        endFound = true;
-            //        return 1;
-            //    }
-            //    current = instantiatedObjects[i].GetComponentInChildren<PolygonCollider2D>();
-            //    visitedList[i] = true;
-            //    CheckPlayability(current, visitedList, ref endFound);
-            //}
+                if (endFound)
+                    return 1;
+
+                instantiatedObjects[i].GetComponentInChildren<RaycastPlayability>().isCheckingPlayability = false; //stops drawing
+                visitedList[i] = false; //Reset position if previous path didn't find end
+            }
         }
         if (endFound)
             return 1;
         return 0f;
+    }
+
+    float CheckVegetablesUsed(List<bool> visitedList)
+    {
+        int vegetablesUsed = 0;
+        int vegetablesCount = 0;
+
+        for (int i = 0; i < instantiatedObjects.Count; i++)
+        {
+            if (instantiatedObjects[i].tag == "Fruit")
+            {
+                vegetablesCount++;
+                if (visitedList[i])
+                    vegetablesUsed++;
+            }
+        }
+
+        int vegetablesUnused = vegetablesCount - vegetablesUsed;
+
+        return vegetablesUsed == 0 ? 1 : 0;
     }
 
     float CalculateFitness()
@@ -384,7 +409,7 @@ public class GE_LevelGenerator : MonoBehaviour
             visited.Add(false);
         }
         visited[0] = true;
-        float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd() + 100 * CheckPlayability(instantiatedObjects[0], visited, ref endFound);
+        float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd() + 100 * CheckPlayability(instantiatedObjects[0], visited, ref endFound) + 100 * CheckVegetablesUsed(visited);
 
         Debug.Log(fitness);
         return fitness;

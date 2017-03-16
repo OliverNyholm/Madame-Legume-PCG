@@ -47,7 +47,7 @@ public class RaycastPlayability : MonoBehaviour
 
     public bool isRayHittingPlatform(GameObject other)
     {
-        isCheckingPlayability = true;
+        //isCheckingPlayability = true;
 
         // other.GetComponentInChildren<Collider2D>()
         Collider2D otherCol;
