@@ -48,14 +48,22 @@ public class RaycastPlayability : MonoBehaviour
     public bool isRayHittingPlatform(GameObject other)
     {
         isCheckingPlayability = true;
+
+        // other.GetComponentInChildren<Collider2D>()
+        Collider2D otherCol;
+        if (other)
+            otherCol = other.transform.FindChild("MovementArea").GetComponent<Collider2D>();
+        else
+            otherCol = null;
+
         if (isLeftSideClear())
-            if (DrawRaysBottomLeft(other))
+            if (DrawRaysBottomLeft(otherCol))
                 return true;
         if (isRightSideClear())
-            if (DrawRaysBottomRight(other))
+            if (DrawRaysBottomRight(otherCol))
                 return true;
 
-        if (DrawRaysUp(other) || DrawRaysTopRight(other) || DrawRaysTopMiddle(other) || DrawRaysTopLeft(other))
+        if (DrawRaysUp(otherCol) || DrawRaysTopRight(otherCol) || DrawRaysTopMiddle(otherCol) || DrawRaysTopLeft(otherCol) || DrawRaysRight(otherCol) || DrawRaysLeft(otherCol))
         {
             return true;
         }
@@ -69,7 +77,7 @@ public class RaycastPlayability : MonoBehaviour
         RaycastHit2D rightSide = Physics2D.Raycast(endPoint, Vector2.right, minimunWidth);
 
 
-        Debug.DrawRay(endPoint, Vector2.right * minimunWidth, Color.red);
+        //Debug.DrawRay(endPoint, Vector2.right * minimunWidth, Color.red);
 
         if (rightSide.collider == null)
             return true;
@@ -82,7 +90,7 @@ public class RaycastPlayability : MonoBehaviour
         float minimunWidth = 1.2f;
         RaycastHit2D leftSide = Physics2D.Raycast(startPoint, Vector2.left, minimunWidth);
 
-        Debug.DrawRay(startPoint, Vector2.left * minimunWidth, Color.red);
+        //Debug.DrawRay(startPoint, Vector2.left * minimunWidth, Color.red);
 
         if (leftSide.collider == null)
             return true;
@@ -90,7 +98,40 @@ public class RaycastPlayability : MonoBehaviour
         return false;
     }
 
-    bool DrawRaysUp(GameObject other)
+    bool DrawRaysRight(Collider2D other)
+    {
+        float minimunWidth = 1.2f;
+        RaycastHit2D rightSide = Physics2D.Raycast(endPoint, Vector2.right, minimunWidth);
+
+        Debug.DrawRay(endPoint, Vector2.right * rightSide.distance, Color.red);
+
+        if (other == null)
+            return false;
+
+        if (rightSide.collider != null && rightSide.collider == other)
+            return true;
+
+        return false;
+    }
+
+    bool DrawRaysLeft(Collider2D other)
+    {
+        float minimunWidth = 1.2f;
+        RaycastHit2D leftSide = Physics2D.Raycast(startPoint, Vector2.left, minimunWidth);
+
+        Debug.DrawRay(startPoint, Vector2.left * leftSide.distance, Color.red);
+
+        if (other == null)
+            return false;
+
+        if (leftSide.collider != null && leftSide.collider == other)
+            return true;
+
+        return false;
+    }
+
+
+    bool DrawRaysUp(Collider2D other)
     {
 
         RaycastHit2D topMiddle = Physics2D.Raycast(startTopMiddle, Vector2.up, playerHeightMin);
@@ -98,22 +139,22 @@ public class RaycastPlayability : MonoBehaviour
         RaycastHit2D topLeft = Physics2D.Raycast(startTopLeft, Vector2.up, playerHeightMin);
 
 
-        Debug.DrawRay(startTopMiddle, new Vector2(0, playerHeightMin), Color.red);
-        Debug.DrawRay(startTopRight, new Vector2(0, playerHeightMin), Color.red);
-        Debug.DrawRay(startTopLeft, new Vector2(0, playerHeightMin), Color.red);
+        Debug.DrawRay(startTopMiddle, Vector2.up  * topMiddle.distance, Color.red);
+        Debug.DrawRay(startTopRight, Vector2.up * topRight.distance, Color.red);
+        Debug.DrawRay(startTopLeft, Vector2.up * topLeft.distance, Color.red);
 
         if (other == null)
             return false;
 
-        if (topMiddle.collider != null && topMiddle.collider == other.GetComponentInChildren<Collider2D>() ||
-            topRight.collider != null && topRight.collider == other.GetComponentInChildren<Collider2D>() ||
-            topLeft.collider != null && topLeft.collider == other.GetComponentInChildren<Collider2D>())
+        if (topMiddle.collider != null && topMiddle.collider == other ||
+            topRight.collider != null && topRight.collider == other ||
+            topLeft.collider != null && topLeft.collider == other)
             return true;
 
         return false;
     }
 
-    bool DrawRaysTopRight(GameObject other)
+    bool DrawRaysTopRight(Collider2D other)
     {
         Vector3 topRightDirection = endTopRight - startTopRight;
         Vector3 topRightMiddleDirection = endTopRightMiddle - startTopRight;
@@ -121,21 +162,20 @@ public class RaycastPlayability : MonoBehaviour
         RaycastHit2D topRight = Physics2D.Raycast(startTopRight, topRightDirection, Vector3.Magnitude(topRightDirection));
         RaycastHit2D topRightMiddle = Physics2D.Raycast(startTopRight, topRightMiddleDirection, Vector3.Magnitude(topRightMiddleDirection));
 
-        topRightDirection.Normalize();
-        Debug.DrawRay(startTopRight, topRightDirection * topRight.distance, Color.red);
-        Debug.DrawRay(startTopRight, topRightMiddleDirection, Color.red);
+        Debug.DrawRay(startTopRight, topRightDirection.normalized * topRight.distance, Color.red);
+        Debug.DrawRay(startTopRight, topRightMiddleDirection.normalized * topRightMiddle.distance, Color.red);
 
         if (other == null)
             return false;
 
-        if (topRight.collider != null && topRight.collider == other.GetComponentInChildren<Collider2D>() ||
-            topRightMiddle.collider != null && topRightMiddle.collider == other.GetComponentInChildren<Collider2D>())
+        if (topRight.collider != null && topRight.collider == other ||
+            topRightMiddle.collider != null && topRightMiddle.collider == other)
             return true;
 
         return false;
     }
 
-    bool DrawRaysTopMiddle(GameObject other)
+    bool DrawRaysTopMiddle(Collider2D other)
     {
         Vector3 topMiddleDirection = endTopMiddle - startTopMiddle;
         Vector3 topMiddleRightDirection = endTopRight - startTopMiddle;
@@ -149,27 +189,27 @@ public class RaycastPlayability : MonoBehaviour
         RaycastHit2D topMiddleLeft = Physics2D.Raycast(startTopMiddle, topMiddleLeftDirection, Vector3.Magnitude(-topMiddleRightDirection));
         RaycastHit2D topMiddleLeftMiddle = Physics2D.Raycast(startTopMiddle, topMiddleLeftMiddleDirection, Vector3.Magnitude(-topMiddleRightMiddleDirection));
 
-        Debug.DrawRay(startTopMiddle, topMiddleDirection, Color.red);
-        Debug.DrawRay(startTopMiddle, topMiddleRightDirection, Color.red);
-        Debug.DrawRay(startTopMiddle, topMiddleRightMiddleDirection, Color.red);
-        Debug.DrawRay(startTopMiddle, topMiddleLeftDirection, Color.red);
-        Debug.DrawRay(startTopMiddle, topMiddleLeftMiddleDirection, Color.red);
+        Debug.DrawRay(startTopMiddle, topMiddleDirection.normalized * topMiddle.distance, Color.red);
+        Debug.DrawRay(startTopMiddle, topMiddleRightDirection.normalized * topMiddleRight.distance, Color.red);
+        Debug.DrawRay(startTopMiddle, topMiddleRightMiddleDirection.normalized * topMiddleRightMiddle.distance, Color.red);
+        Debug.DrawRay(startTopMiddle, topMiddleLeftDirection.normalized * topMiddleLeft.distance, Color.red);
+        Debug.DrawRay(startTopMiddle, topMiddleLeftMiddleDirection.normalized * topMiddleLeftMiddle.distance, Color.red);
 
 
         if (other == null)
             return false;
 
-        if (topMiddle.collider != null && topMiddle.collider == other.GetComponentInChildren<Collider2D>() ||
-            topMiddleRight.collider != null && topMiddleRight.collider == other.GetComponentInChildren<Collider2D>()
-            || topMiddleRightMiddle.collider != null && topMiddleRightMiddle.collider == other.GetComponentInChildren<Collider2D>()
-            || topMiddleLeft.collider != null && topMiddleLeft.collider == other.GetComponentInChildren<Collider2D>() ||
-            topMiddleLeftMiddle.collider != null && topMiddleLeftMiddle.collider == other.GetComponentInChildren<Collider2D>())
+        if (topMiddle.collider != null && topMiddle.collider == other ||
+            topMiddleRight.collider != null && topMiddleRight.collider == other
+            || topMiddleRightMiddle.collider != null && topMiddleRightMiddle.collider == other
+            || topMiddleLeft.collider != null && topMiddleLeft.collider == other ||
+            topMiddleLeftMiddle.collider != null && topMiddleLeftMiddle.collider == other)
             return true;
 
         return false;
     }
 
-    bool DrawRaysTopLeft(GameObject other)
+    bool DrawRaysTopLeft(Collider2D other)
     {
         Vector3 topMiddleLeftDirection = endTopLeft - startTopLeft;
         Vector3 topMiddleLeftMiddleDirection = endTopLeftMiddle - startTopLeft;
@@ -177,20 +217,20 @@ public class RaycastPlayability : MonoBehaviour
         RaycastHit2D topLeft = Physics2D.Raycast(startTopLeft, topMiddleLeftDirection, Vector3.Magnitude(topMiddleLeftDirection));
         RaycastHit2D topLeftMiddle = Physics2D.Raycast(startTopLeft, topMiddleLeftMiddleDirection, Vector3.Magnitude(topMiddleLeftMiddleDirection));
 
-        Debug.DrawRay(startTopLeft, topMiddleLeftDirection, Color.red);
-        Debug.DrawRay(startTopLeft, topMiddleLeftMiddleDirection, Color.red);
+        Debug.DrawRay(startTopLeft, topMiddleLeftDirection.normalized * topLeft.distance, Color.red);
+        Debug.DrawRay(startTopLeft, topMiddleLeftMiddleDirection.normalized * topLeftMiddle.distance, Color.red);
 
         if (other == null)
             return false;
 
-        if (topLeft.collider != null && topLeft.collider == other.GetComponentInChildren<Collider2D>() ||
-            topLeftMiddle.collider != null && topLeftMiddle.collider == other.GetComponentInChildren<Collider2D>())
+        if (topLeft.collider != null && topLeft.collider == other ||
+            topLeftMiddle.collider != null && topLeftMiddle.collider == other)
             return true;
 
         return false;
     }
 
-    bool DrawRaysBottomRight(GameObject other)
+    bool DrawRaysBottomRight(Collider2D other)
     {
         Vector3 bottomRightDirection = endBottomRight - startBottomRight;
         Vector3 bottomMiddleDirection = endBottomMiddle - startBottomRight;
@@ -200,22 +240,22 @@ public class RaycastPlayability : MonoBehaviour
         RaycastHit2D bottomMiddle = Physics2D.Raycast(startBottomRight, bottomMiddleDirection, Vector3.Magnitude(bottomMiddleDirection));
         RaycastHit2D topRight = Physics2D.Raycast(endTopRight, topRightDirection, Vector3.Magnitude(topRightDirection));
 
-        Debug.DrawRay(startBottomRight, bottomRightDirection, Color.red);
-        Debug.DrawRay(startBottomRight, bottomMiddleDirection, Color.red);
-        Debug.DrawRay(endTopRight, topRightDirection, Color.red);
+        Debug.DrawRay(startBottomRight, bottomRightDirection.normalized * bottomRight.distance, Color.red);
+        Debug.DrawRay(startBottomRight, bottomMiddleDirection.normalized * bottomMiddle.distance, Color.red);
+        Debug.DrawRay(endTopRight, topRightDirection.normalized * topRight.distance, Color.red);
 
         if (other == null)
             return false;
 
-        if (bottomRight.collider != null && bottomRight.collider == other.GetComponentInChildren<Collider2D>() ||
-            bottomMiddle.collider != null && bottomMiddle.collider == other.GetComponentInChildren<Collider2D>() ||
-            topRight.collider != null && topRight.collider == other.GetComponentInChildren<Collider2D>())
+        if (bottomRight.collider != null && bottomRight.collider == other ||
+            bottomMiddle.collider != null && bottomMiddle.collider == other ||
+            topRight.collider != null && topRight.collider == other)
             return true;
 
         return false;
     }
 
-    bool DrawRaysBottomLeft(GameObject other)
+    bool DrawRaysBottomLeft(Collider2D other)
     {
 
 
@@ -227,16 +267,16 @@ public class RaycastPlayability : MonoBehaviour
         RaycastHit2D bottomMiddle = Physics2D.Raycast(startBottomLeft, bottomMiddleDirection, Vector3.Magnitude(bottomMiddleDirection));
         RaycastHit2D topLeft = Physics2D.Raycast(endTopLeft, topLeftDirection, Vector3.Magnitude(topLeftDirection));
 
-        Debug.DrawRay(startBottomLeft, bottomLeftDirection, Color.red);
-        Debug.DrawRay(startBottomLeft, bottomMiddleDirection, Color.red);
-        Debug.DrawRay(endTopLeft, topLeftDirection, Color.red);
+        Debug.DrawRay(startBottomLeft, bottomLeftDirection.normalized * bottomLeft.distance, Color.red);
+        Debug.DrawRay(startBottomLeft, bottomMiddleDirection.normalized * bottomMiddle.distance, Color.red);
+        Debug.DrawRay(endTopLeft, topLeftDirection.normalized * topLeft.distance, Color.red);
 
         if (other == null)
             return false;
 
-        if (bottomLeft.collider != null && bottomLeft.collider == other.GetComponentInChildren<Collider2D>() ||
-            bottomMiddle.collider != null && bottomMiddle.collider == other.GetComponentInChildren<Collider2D>() ||
-            topLeft.collider != null && topLeft.collider == other.GetComponentInChildren<Collider2D>())
+        if (bottomLeft.collider != null && bottomLeft.collider == other ||
+            bottomMiddle.collider != null && bottomMiddle.collider == other ||
+            topLeft.collider != null && topLeft.collider == other)
             return true;
 
         return false;
