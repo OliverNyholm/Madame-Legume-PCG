@@ -4,13 +4,11 @@ using UnityEngine;
 
 public class RaycastPlayability : MonoBehaviour
 {
-    [SerializeField]
-    private RoomEndPoint roomEndPoint;
-
     private float playerHeightMin;
     private Vector3 startTopMiddle, startTopRight, startTopLeft, startBottomRight, startBottomLeft, startPoint, endPoint;
     private Vector3 endTopMiddle, endTopRight, endTopRightMiddle, endTopLeft, endTopLeftMiddle, endBottomMiddle, endBottomRight, endBottomLeft;
 
+    [SerializeField]
     public bool isCheckingPlayability;
     // Use this for initialization
     void Awake()
@@ -49,6 +47,7 @@ public class RaycastPlayability : MonoBehaviour
 
     public bool isRayHittingPlatform(GameObject other)
     {
+        isCheckingPlayability = true;
         if (isLeftSideClear())
             if (DrawRaysBottomLeft(other))
                 return true;
@@ -58,7 +57,6 @@ public class RaycastPlayability : MonoBehaviour
 
         if (DrawRaysUp(other) || DrawRaysTopRight(other) || DrawRaysTopMiddle(other) || DrawRaysTopLeft(other))
         {
-            Debug.Log("HOLY SHIT, FOUND ONE!!");
             return true;
         }
 
@@ -104,9 +102,6 @@ public class RaycastPlayability : MonoBehaviour
         Debug.DrawRay(startTopRight, new Vector2(0, playerHeightMin), Color.red);
         Debug.DrawRay(startTopLeft, new Vector2(0, playerHeightMin), Color.red);
 
-        if (topMiddle.collider != null || topRight.collider != null)
-            Debug.Log("LOL UP");//     name topMiddle:" + topMiddle.collider.name + "    topRight:" + topRight.collider.name);
-
         if (other == null)
             return false;
 
@@ -125,15 +120,10 @@ public class RaycastPlayability : MonoBehaviour
 
         RaycastHit2D topRight = Physics2D.Raycast(startTopRight, topRightDirection, Vector3.Magnitude(topRightDirection));
         RaycastHit2D topRightMiddle = Physics2D.Raycast(startTopRight, topRightMiddleDirection, Vector3.Magnitude(topRightMiddleDirection));
-        
+
         topRightDirection.Normalize();
         Debug.DrawRay(startTopRight, topRightDirection * topRight.distance, Color.red);
         Debug.DrawRay(startTopRight, topRightMiddleDirection, Color.red);
-
-        if (topRight.collider != null || topRightMiddle.collider != null)
-        {
-            Debug.Log("LOL RIGHT");
-        }
 
         if (other == null)
             return false;
@@ -166,9 +156,6 @@ public class RaycastPlayability : MonoBehaviour
         Debug.DrawRay(startTopMiddle, topMiddleLeftMiddleDirection, Color.red);
 
 
-        if (topMiddle.collider != null || topMiddleRight.collider != null || topMiddleRightMiddle.collider != null /*|| topMiddleLeft.collider != null || topMiddleLeftMiddle.collider != null*/)
-            Debug.Log("LOL MIDDLE");
-
         if (other == null)
             return false;
 
@@ -193,9 +180,6 @@ public class RaycastPlayability : MonoBehaviour
         Debug.DrawRay(startTopLeft, topMiddleLeftDirection, Color.red);
         Debug.DrawRay(startTopLeft, topMiddleLeftMiddleDirection, Color.red);
 
-        //if (topLeft.collider != null || topLeftMiddle.collider != null)
-        //    Debug.Log("LOL");
-
         if (other == null)
             return false;
 
@@ -214,7 +198,7 @@ public class RaycastPlayability : MonoBehaviour
 
         RaycastHit2D bottomRight = Physics2D.Raycast(startBottomRight, bottomRightDirection, Vector3.Magnitude(bottomRightDirection));
         RaycastHit2D bottomMiddle = Physics2D.Raycast(startBottomRight, bottomMiddleDirection, Vector3.Magnitude(bottomMiddleDirection));
-        RaycastHit2D topRight = Physics2D.Raycast(endTopLeft, topRightDirection, Vector3.Magnitude(topRightDirection));
+        RaycastHit2D topRight = Physics2D.Raycast(endTopRight, topRightDirection, Vector3.Magnitude(topRightDirection));
 
         Debug.DrawRay(startBottomRight, bottomRightDirection, Color.red);
         Debug.DrawRay(startBottomRight, bottomMiddleDirection, Color.red);
@@ -233,6 +217,8 @@ public class RaycastPlayability : MonoBehaviour
 
     bool DrawRaysBottomLeft(GameObject other)
     {
+
+
         Vector3 bottomLeftDirection = endBottomLeft - startBottomLeft;
         Vector3 bottomMiddleDirection = endBottomMiddle - startBottomLeft;
         Vector3 topLeftDirection = endBottomLeft - endTopLeft;

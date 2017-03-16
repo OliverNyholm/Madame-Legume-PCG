@@ -59,6 +59,7 @@ public class GE_LevelGenerator : MonoBehaviour
     float bottomEdgeY;
     float topEdgeY;
 
+
     // Use this for initialization
     void Start()
     {
@@ -128,6 +129,19 @@ public class GE_LevelGenerator : MonoBehaviour
             //GameObject camera = GameObject.Find("Main Camera");
             character.GetComponentInChildren<Camera>().enabled = true;
             mainCamera.SetActive(false);
+        }
+
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            bool endFound = false;
+            List<bool> visited = new List<bool>();
+            for (int i = 0; i < instantiatedObjects.Count; i++)
+            {
+                visited.Add(false);
+            }
+            visited[0] = true;
+            float temp = CheckPlayability(instantiatedObjects[0], visited, ref endFound);
+            Debug.Log("CheckPlayability: " + temp);
         }
     }
 
@@ -332,18 +346,16 @@ public class GE_LevelGenerator : MonoBehaviour
             if (endFound)
                 break;
 
-
-            if (current != instantiatedObjects[i] && instantiatedObjects[i].tag != "Blade" && current.GetComponentInChildren<RaycastPlayability>().isRayHittingPlatform(instantiatedObjects[i]))
+            if (current != instantiatedObjects[i] && instantiatedObjects[i].tag != "Blade" && !visitedList[i] &&  current.GetComponentInChildren<RaycastPlayability>().isRayHittingPlatform(instantiatedObjects[i]))
             {
-                Debug.Log("Nuu, jävlar: " + i);
                 if (instantiatedObjects[i].GetComponentInParent<Transform>().gameObject.tag == "End")
                 {
+                    Debug.Log("Found End");
                     endFound = true;
                     return 1;
                 }
-                current = instantiatedObjects[i];
                 visitedList[i] = true;
-                CheckPlayability(current, visitedList, ref endFound);
+                CheckPlayability(instantiatedObjects[i], visitedList, ref endFound);
             }
 
             //if (current.bounds.Intersects(instantiatedObjects[i].GetComponentInChildren<BoxCollider2D>().bounds) && current != instantiatedObjects[i] && !visitedList[i])
@@ -372,7 +384,7 @@ public class GE_LevelGenerator : MonoBehaviour
             visited.Add(false);
         }
         visited[0] = true;
-        float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd(); // + 100 * CheckPlayability(instantiatedObjects[0], visited, ref endFound);
+        float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd() + 100 * CheckPlayability(instantiatedObjects[0], visited, ref endFound);
 
         Debug.Log(fitness);
         return fitness;
