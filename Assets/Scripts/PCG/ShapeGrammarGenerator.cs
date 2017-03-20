@@ -84,7 +84,7 @@ public class ShapeGrammarGenerator : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Return))
         {
             ClearConsole();
-            SceneManager.LoadScene("PCG_Level");
+            SceneManager.LoadScene("PCG_Rule_Level");
         }
     }
 
