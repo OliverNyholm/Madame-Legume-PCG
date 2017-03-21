@@ -117,7 +117,7 @@ public class RaycastPlayability : MonoBehaviour
     bool isRightSideTopClear()
     {
         float minimunWidth = 1.2f;
-        Vector3 startpos = new Vector2(startTopRight.x, startTopRight.y + playerJumpHeightMin);
+        Vector3 startpos = new Vector2(startTopRight.x + 1, startTopRight.y + playerJumpHeightMin);
         Vector3 direction = endTopRight - startpos;
         RaycastHit2D rightSideTop = Physics2D.Raycast(startpos, direction, direction.magnitude);
         RaycastHit2D rightSideBottom = Physics2D.Raycast(minPlayerHeightRight, Vector2.right, minimunWidth);
@@ -151,7 +151,7 @@ public class RaycastPlayability : MonoBehaviour
     bool isLeftSideTopClear()
     {
         float minimunWidth = 1.2f;
-        Vector3 startpos = new Vector2(startTopLeft.x, startTopLeft.y + playerJumpHeightMin);
+        Vector3 startpos = new Vector2(startTopLeft.x - 1, startTopLeft.y + playerJumpHeightMin);
         Vector3 direction = endTopLeft - startpos;
         RaycastHit2D leftSideTop = Physics2D.Raycast(startpos, direction, direction.magnitude);
         RaycastHit2D leftSideBottom = Physics2D.Raycast(minPlayerHeightLeft, Vector2.left, minimunWidth);
@@ -253,7 +253,7 @@ public class RaycastPlayability : MonoBehaviour
         RaycastHit2D topRightMiddle = Physics2D.Raycast(startTopRight, topRightMiddleDirection, Vector3.Magnitude(topRightMiddleDirection));
         RaycastHit2D topMiddleRight = Physics2D.Raycast(startTopMiddle, topMiddleRightDirection, Vector3.Magnitude(topMiddleRightDirection));
         RaycastHit2D topMiddleRightMiddle = Physics2D.Raycast(startTopMiddle, topMiddleRightMiddleDirection, Vector3.Magnitude(topMiddleRightMiddleDirection));
-
+        
         Debug.DrawRay(startTopRight, GetDrawDistance(topRightDirection, topRight.distance), Color.red);
         Debug.DrawRay(startTopRight, GetDrawDistance(topRightMiddleDirection, topRightMiddle.distance), Color.red);
         Debug.DrawRay(startTopMiddle, GetDrawDistance(topMiddleRightDirection, topMiddleRight.distance), Color.red);

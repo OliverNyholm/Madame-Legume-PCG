@@ -361,9 +361,15 @@ public class GE_LevelGenerator : MonoBehaviour
                 current.GetComponentInChildren<RaycastPlayability>().isCheckingPlayability = true; //Draws the rays hit
                 if (instantiatedObjects[i].GetComponentInParent<Transform>().gameObject.tag == "End")
                 {
-                    Debug.Log("Found End");
-                    endFound = true;
-                    return 1;
+                    Debug.Log("Found End Platform");
+                    if (instantiatedObjects[i].GetComponent<RaycastToEnd>().RetraceRaycast(current))
+                    {
+                        Debug.Log("Found End Box");
+                        endFound = true;
+                        return 1;
+
+                    }
+                    continue;
                 }
                 visitedList[i] = true;
                 CheckPlayability(instantiatedObjects[i], visitedList, ref endFound);
