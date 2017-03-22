@@ -17,7 +17,7 @@ public class RaycastPlayability : MonoBehaviour
     // Use this for initialization
     void Awake()
     {
-        playerHeightMin = 3f;
+        playerHeightMin = 2f;
         playerJumpHeightMin = 4f;
 
         startTopMiddle = getChildGameObject(gameObject, "StartTopMiddle").transform.position;
@@ -102,8 +102,11 @@ public class RaycastPlayability : MonoBehaviour
         RaycastHit2D rightSideBottom = Physics2D.Raycast(endPoint, Vector2.right, minimunWidth);
         RaycastHit2D rightSideMid = Physics2D.Raycast(new Vector2(startTopRight.x - minimunWidth, startTopRight.y + playerHeightMin / 3), Vector2.right, minimunWidth * 2);
         RaycastHit2D rightSideTop = Physics2D.Raycast(new Vector2(minPlayerHeightRight.x - minimunWidth, minPlayerHeightRight.y), Vector2.right, minimunWidth + 0.8f);
+        RaycastHit2D rightSideDown = Physics2D.Raycast(endPoint + new Vector3(minimunWidth, 0), Vector2.down, 0.8f);
 
-        if (rightSideBottom.collider == null && rightSideMid.collider == null && rightSideTop.collider == null)
+        Debug.DrawRay(endPoint + new Vector3(minimunWidth, 0), GetDrawDistance(Vector3.down * 0.8f, rightSideDown.distance), Color.black);
+
+        if (rightSideBottom.collider == null && rightSideMid.collider == null && rightSideTop.collider == null && rightSideDown.collider == null)
             if (DrawRaysBottomRight(other))
                 return true;
 
@@ -119,12 +122,15 @@ public class RaycastPlayability : MonoBehaviour
         float minimunWidth = 1.2f;
         Vector3 startpos = new Vector2(startTopRight.x + 1, startTopRight.y + playerJumpHeightMin);
         Vector3 direction = endTopRight - startpos;
+        Vector3 directionToStart = startpos - startTopRight;
         RaycastHit2D rightSideTop = Physics2D.Raycast(startpos, direction, direction.magnitude);
-        RaycastHit2D rightSideBottom = Physics2D.Raycast(minPlayerHeightRight, Vector2.right, minimunWidth);
+        RaycastHit2D rightSideMid = Physics2D.Raycast(minPlayerHeightRight, Vector2.right, minimunWidth);
+        RaycastHit2D rightSideBot = Physics2D.Raycast(startTopRight, directionToStart, directionToStart.magnitude);
 
         Debug.DrawRay(startpos, GetDrawDistance(direction, rightSideTop.distance), Color.black);
+        Debug.DrawRay(startTopRight, GetDrawDistance(directionToStart, rightSideBot.distance), Color.black);
 
-        if (rightSideTop.collider == null && rightSideBottom.collider == null)
+        if (rightSideTop.collider == null && rightSideMid.collider == null && rightSideBot.collider == null)
             return true;
 
         return false;
@@ -136,8 +142,11 @@ public class RaycastPlayability : MonoBehaviour
         RaycastHit2D leftSideBottom = Physics2D.Raycast(startPoint, Vector2.left, minimunWidth);
         RaycastHit2D leftSideMid = Physics2D.Raycast(new Vector2(startTopLeft.x + minimunWidth, startTopLeft.y + playerHeightMin / 3), Vector2.left, minimunWidth * 2);
         RaycastHit2D leftSideTop = Physics2D.Raycast(new Vector2(minPlayerHeightLeft.x + minimunWidth, minPlayerHeightLeft.y), Vector2.left, minimunWidth + 0.8f);
+        RaycastHit2D leftSideDown = Physics2D.Raycast(startPoint - new Vector3(minimunWidth, 0), Vector2.down, 0.8f);
 
-        if (leftSideBottom.collider == null && leftSideMid.collider == null && leftSideTop.collider == null)
+        Debug.DrawRay(startPoint - new Vector3(minimunWidth, 0), GetDrawDistance(Vector3.down * 0.8f, leftSideDown.distance), Color.black);
+
+        if (leftSideBottom.collider == null && leftSideMid.collider == null && leftSideTop.collider == null && leftSideDown.collider == null)
             if (DrawRaysBottomLeft(other))
                 return true;
 
@@ -153,12 +162,15 @@ public class RaycastPlayability : MonoBehaviour
         float minimunWidth = 1.2f;
         Vector3 startpos = new Vector2(startTopLeft.x - 1, startTopLeft.y + playerJumpHeightMin);
         Vector3 direction = endTopLeft - startpos;
+        Vector3 directionToStart = startpos - startTopLeft;
         RaycastHit2D leftSideTop = Physics2D.Raycast(startpos, direction, direction.magnitude);
         RaycastHit2D leftSideBottom = Physics2D.Raycast(minPlayerHeightLeft, Vector2.left, minimunWidth);
+        RaycastHit2D leftSideBot = Physics2D.Raycast(startTopLeft, directionToStart, directionToStart.magnitude);
 
         Debug.DrawRay(startpos, GetDrawDistance(direction, leftSideTop.distance), Color.black);
+        Debug.DrawRay(startTopLeft, GetDrawDistance(directionToStart, leftSideBot.distance), Color.black);
 
-        if (leftSideTop.collider == null && leftSideBottom.collider == null)
+        if (leftSideTop.collider == null && leftSideBottom.collider == null && leftSideBot.collider == null)
             return true;
 
         return false;
@@ -230,11 +242,11 @@ public class RaycastPlayability : MonoBehaviour
             if (DrawRaysDownTopMiddle(other))
                 return true;
 
-        if (topRight.collider == null && topRight2.collider == null)
+        if (topRight.collider == null)
             if (DrawRaysDownTopMiddleRight(other))
                 return true;
 
-        if (topLeft.collider == null && topLeft2.collider == null)
+        if (topLeft.collider == null)
             if (DrawRaysDownTopMiddleLeft(other))
                 return true;
 
@@ -294,9 +306,9 @@ public class RaycastPlayability : MonoBehaviour
         Vector3 downRightDirection = startTopRight - endTopMiddle;
         Vector3 downLeftDirection = startTopLeft - endTopMiddle;
 
-        RaycastHit2D downMiddle = Physics2D.Raycast(endTopMiddle, downDirection, downDirection.magnitude);
-        RaycastHit2D downRight = Physics2D.Raycast(endTopMiddle, downRightDirection, downRightDirection.magnitude);
-        RaycastHit2D downLeft = Physics2D.Raycast(endTopMiddle, downLeftDirection, downLeftDirection.magnitude);
+        RaycastHit2D downMiddle = Physics2D.Raycast(endTopMiddle, downDirection, downDirection.magnitude * 1.3f);
+        RaycastHit2D downRight = Physics2D.Raycast(endTopMiddle, downRightDirection, downRightDirection.magnitude * 1.3f);
+        RaycastHit2D downLeft = Physics2D.Raycast(endTopMiddle, downLeftDirection, downLeftDirection.magnitude * 1.3f);
 
         Debug.DrawRay(endTopMiddle, GetDrawDistance(downDirection, downMiddle.distance), Color.yellow);
         Debug.DrawRay(endTopMiddle, GetDrawDistance(downRightDirection, downRight.distance), Color.yellow);
@@ -314,8 +326,8 @@ public class RaycastPlayability : MonoBehaviour
         Vector3 downLeftDirection = startTopMiddle - startPos;
         Vector3 downRightDirection = new Vector3(downLeftDirection.x * -1, downLeftDirection.y);
 
-        RaycastHit2D downRight = Physics2D.Raycast(startPos, downRightDirection, downRightDirection.magnitude);
-        RaycastHit2D downLeft = Physics2D.Raycast(startPos, downLeftDirection, downLeftDirection.magnitude);
+        RaycastHit2D downRight = Physics2D.Raycast(startPos, downRightDirection, downRightDirection.magnitude * 1.3f);
+        RaycastHit2D downLeft = Physics2D.Raycast(startPos, downLeftDirection, downLeftDirection.magnitude * 1.3f);
 
         Debug.DrawRay(startPos, GetDrawDistance(downRightDirection, downRight.distance), Color.blue);
         Debug.DrawRay(startPos, GetDrawDistance(downLeftDirection, downLeft.distance), Color.blue);
@@ -332,8 +344,8 @@ public class RaycastPlayability : MonoBehaviour
         Vector3 downLeftDirection = startTopMiddle - startPos;
         Vector3 downRightDirection = new Vector3(downLeftDirection.x * -1, downLeftDirection.y);
 
-        RaycastHit2D downRight = Physics2D.Raycast(startPos, downRightDirection, downRightDirection.magnitude);
-        RaycastHit2D downLeft = Physics2D.Raycast(startPos, downLeftDirection, downLeftDirection.magnitude);
+        RaycastHit2D downRight = Physics2D.Raycast(startPos, downRightDirection, downRightDirection.magnitude * 1.3f);
+        RaycastHit2D downLeft = Physics2D.Raycast(startPos, downLeftDirection, downLeftDirection.magnitude * 1.3f);
 
         Debug.DrawRay(startPos, GetDrawDistance(downRightDirection, downRight.distance), Color.blue);
         Debug.DrawRay(startPos, GetDrawDistance(downLeftDirection, downLeft.distance), Color.blue);
@@ -382,11 +394,11 @@ public class RaycastPlayability : MonoBehaviour
         Vector3 bottomRightDirection4 = endBottomRight2 -(startTopRight + new Vector3(1.2f, 0)); //From top of platform
         Vector3 bottomMiddleDirection = endBottomMiddle - startBottomRight;
 
-        RaycastHit2D bottomRight1 = Physics2D.Raycast(startBottomRight, bottomRightDirection1, Vector3.Magnitude(bottomRightDirection1));
-        RaycastHit2D bottomRight2 = Physics2D.Raycast(startBottomRight, bottomRightDirection2, Vector3.Magnitude(bottomRightDirection2));
-        RaycastHit2D bottomRight3 = Physics2D.Raycast(startBottomRight, bottomRightDirection3, Vector3.Magnitude(bottomRightDirection3));
-        RaycastHit2D bottomRight4 = Physics2D.Raycast(startTopRight + new Vector3(1.2f, 0), bottomRightDirection4, Vector3.Magnitude(bottomRightDirection4));
-        RaycastHit2D bottomMiddle = Physics2D.Raycast(startBottomRight, bottomMiddleDirection, Vector3.Magnitude(bottomMiddleDirection));
+        RaycastHit2D bottomRight1 = Physics2D.Raycast(startBottomRight, bottomRightDirection1);
+        RaycastHit2D bottomRight2 = Physics2D.Raycast(startBottomRight, bottomRightDirection2);
+        RaycastHit2D bottomRight3 = Physics2D.Raycast(startBottomRight, bottomRightDirection3);
+        RaycastHit2D bottomRight4 = Physics2D.Raycast(startTopRight + new Vector3(1.2f, 0), bottomRightDirection4);
+        RaycastHit2D bottomMiddle = Physics2D.Raycast(startBottomRight, bottomMiddleDirection);
 
         Debug.DrawRay(startBottomRight, GetDrawDistance(bottomRightDirection1, bottomRight1.distance), Color.magenta);
         Debug.DrawRay(startBottomRight, GetDrawDistance(bottomRightDirection2, bottomRight2.distance), Color.magenta);
@@ -416,11 +428,11 @@ public class RaycastPlayability : MonoBehaviour
         Vector3 bottomRightDirection4 = endBottomMiddle + new Vector3(distance * 4, 0) - endTopRight;
         Vector3 bottomRightDirection5 = endBottomRight - endTopRight;
 
-        RaycastHit2D bottomRight1 = Physics2D.Raycast(endTopRight, bottomRightDirection1, Vector3.Magnitude(bottomRightDirection1));
-        RaycastHit2D bottomRight2 = Physics2D.Raycast(endTopRight, bottomRightDirection2, Vector3.Magnitude(bottomRightDirection2));
-        RaycastHit2D bottomRight3 = Physics2D.Raycast(endTopRight, bottomRightDirection3, Vector3.Magnitude(bottomRightDirection3));
-        RaycastHit2D bottomRight4 = Physics2D.Raycast(endTopRight, bottomRightDirection4, Vector3.Magnitude(bottomRightDirection4));
-        RaycastHit2D bottomRight5 = Physics2D.Raycast(endTopRight, bottomRightDirection5, Vector3.Magnitude(bottomRightDirection5));
+        RaycastHit2D bottomRight1 = Physics2D.Raycast(endTopRight, bottomRightDirection1);
+        RaycastHit2D bottomRight2 = Physics2D.Raycast(endTopRight, bottomRightDirection2);
+        RaycastHit2D bottomRight3 = Physics2D.Raycast(endTopRight, bottomRightDirection3);
+        RaycastHit2D bottomRight4 = Physics2D.Raycast(endTopRight, bottomRightDirection4);
+        RaycastHit2D bottomRight5 = Physics2D.Raycast(endTopRight, bottomRightDirection5);
 
         Debug.DrawRay(endTopRight, GetDrawDistance(bottomRightDirection1, bottomRight1.distance), Color.cyan);
         Debug.DrawRay(endTopRight, GetDrawDistance(bottomRightDirection2, bottomRight2.distance), Color.cyan);
@@ -447,11 +459,11 @@ public class RaycastPlayability : MonoBehaviour
         Vector3 bottomLeftDirection4 = endBottomLeft2 - (startTopLeft - new Vector3(1.2f, 0)); //From top of platform
         Vector3 bottomMiddleDirection = endBottomMiddle - startBottomLeft;
 
-        RaycastHit2D bottomLeft1 = Physics2D.Raycast(startBottomLeft, bottomLeftDirection1, Vector3.Magnitude(bottomLeftDirection1));
-        RaycastHit2D bottomLeft2 = Physics2D.Raycast(startBottomLeft, bottomLeftDirection2, Vector3.Magnitude(bottomLeftDirection2));
-        RaycastHit2D bottomLeft3 = Physics2D.Raycast(startBottomLeft, bottomLeftDirection3, Vector3.Magnitude(bottomLeftDirection3));
-        RaycastHit2D bottomLeft4 = Physics2D.Raycast(startTopLeft - new Vector3(1.2f, 0), bottomLeftDirection4, Vector3.Magnitude(bottomLeftDirection4));
-        RaycastHit2D bottomMiddle = Physics2D.Raycast(startBottomLeft, bottomMiddleDirection, Vector3.Magnitude(bottomMiddleDirection));
+        RaycastHit2D bottomLeft1 = Physics2D.Raycast(startBottomLeft, bottomLeftDirection1);
+        RaycastHit2D bottomLeft2 = Physics2D.Raycast(startBottomLeft, bottomLeftDirection2);
+        RaycastHit2D bottomLeft3 = Physics2D.Raycast(startBottomLeft, bottomLeftDirection3);
+        RaycastHit2D bottomLeft4 = Physics2D.Raycast(startTopLeft - new Vector3(1.2f, 0), bottomLeftDirection4);
+        RaycastHit2D bottomMiddle = Physics2D.Raycast(startBottomLeft, bottomMiddleDirection);
 
         Debug.DrawRay(startBottomLeft, GetDrawDistance(bottomLeftDirection1, bottomLeft1.distance), Color.magenta);
         Debug.DrawRay(startBottomLeft, GetDrawDistance(bottomLeftDirection2, bottomLeft2.distance), Color.magenta);
@@ -481,11 +493,11 @@ public class RaycastPlayability : MonoBehaviour
         Vector3 bottomLeftDirection4 = endBottomMiddle - new Vector3(distance * 4, 0) - endTopLeft;
         Vector3 bottomLeftDirection5 = endBottomLeft - endTopLeft;
 
-        RaycastHit2D bottomLeft1 = Physics2D.Raycast(endTopLeft, bottomLeftDirection1, Vector3.Magnitude(bottomLeftDirection1));
-        RaycastHit2D bottomLeft2 = Physics2D.Raycast(endTopLeft, bottomLeftDirection2, Vector3.Magnitude(bottomLeftDirection2));
-        RaycastHit2D bottomLeft3 = Physics2D.Raycast(endTopLeft, bottomLeftDirection3, Vector3.Magnitude(bottomLeftDirection3));
-        RaycastHit2D bottomLeft4 = Physics2D.Raycast(endTopLeft, bottomLeftDirection4, Vector3.Magnitude(bottomLeftDirection4));
-        RaycastHit2D bottomLeft5 = Physics2D.Raycast(endTopLeft, bottomLeftDirection5, Vector3.Magnitude(bottomLeftDirection5));
+        RaycastHit2D bottomLeft1 = Physics2D.Raycast(endTopLeft, bottomLeftDirection1);
+        RaycastHit2D bottomLeft2 = Physics2D.Raycast(endTopLeft, bottomLeftDirection2);
+        RaycastHit2D bottomLeft3 = Physics2D.Raycast(endTopLeft, bottomLeftDirection3);
+        RaycastHit2D bottomLeft4 = Physics2D.Raycast(endTopLeft, bottomLeftDirection4);
+        RaycastHit2D bottomLeft5 = Physics2D.Raycast(endTopLeft, bottomLeftDirection5);
 
         Debug.DrawRay(endTopLeft, GetDrawDistance(bottomLeftDirection1, bottomLeft1.distance), Color.cyan);
         Debug.DrawRay(endTopLeft, GetDrawDistance(bottomLeftDirection2, bottomLeft2.distance), Color.cyan);

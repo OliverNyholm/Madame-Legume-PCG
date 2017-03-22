@@ -134,17 +134,9 @@ public class GE_LevelGenerator : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.P)) //
         {
-            bool endFound = false;
-            List<bool> visited = new List<bool>();
-            for (int i = 0; i < instantiatedObjects.Count; i++)
-            {
-                visited.Add(false);
-            }
-            visited[0] = true;
-            float temp = CheckPlayability(instantiatedObjects[0], visited, ref endFound);
-            Debug.Log("CheckPlayability: " + temp);
-
-            CheckVegetablesUsed(visited);
+            ClearConsole();
+            CalculateFitness();
+            Debug.Log(lhs);
         }
     }
 
@@ -303,6 +295,10 @@ public class GE_LevelGenerator : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Checks if it is possible to raycast to end from start
+    /// </summary>
+    /// <returns>1 if can't cast to end, 0.7 if possible</returns>
     float CanRaycastToEnd()
     {
         float rayLength = Vector2.Distance(startPlatformEndPoint, endPlatformPosition);
@@ -317,6 +313,10 @@ public class GE_LevelGenerator : MonoBehaviour
         return 1f;
     }
 
+    /// <summary>
+    /// Checks the distance from start to end. Give more fitness if end further away
+    /// </summary>
+    /// <returns>1 if more than 6 in distance, 0.4 if close</returns>
     float CheckStartEndDistance()
     {
         float distance = Vector2.Distance(startPlatformEndPoint, endPlatformPosition);
@@ -329,9 +329,13 @@ public class GE_LevelGenerator : MonoBehaviour
         return 1f;
     }
 
+    /// <summary>
+    /// Checks height difference from start to end. If end above start and no tomatos or carrots, give lower fitness
+    /// </summary>
+    /// <returns>1 if can move up, 0.2 if not possible and level up high</returns>
     float CheckEndHeightPosition()
     {
-        float distance = startPlatformEndPoint.y - (endPlatformPosition.y + 2);
+        float distance = startPlatformEndPoint.y - (endPlatformPosition.y + 2); // +2 cause player can jump that height up
 
         if (lhs.Contains("B") && !lhs.Contains("C") && !lhs.Contains("T") && distance < 0)
         {
@@ -341,14 +345,67 @@ public class GE_LevelGenerator : MonoBehaviour
     }
 
     /// <summary>
+    /// Checks if it is possible to move from start to end with raycasting and without fruits. DFS through all instatiated objects
+    /// </summary>
+    /// <param name="next"> Next instatiated object to raycast from</param>
+    /// <param name="visitedList">List checking which locations have been visited previously</param>
+    /// <param name="endFound">Reference bool checking if end has been found</param>
+    /// <returns>Return 1 if endFound, else 0</returns>
+    bool CheckPlayabilityFindEndWithoutFruits(GameObject next, List<bool> visitedList, ref bool endFound)
+    {
+        if (next.tag == "Start") //Checks to see if the player can move from startPosition
+            if (!next.GetComponentInChildren<RaycastPlayabilityStartPoint>().checkStartPossible())
+                return true; //return true as if the map is shit :)
+
+        GameObject current = next;
+
+        for (int i = instantiatedObjects.Count - 1; i > 0; i--) //Gå bakåt i loopen, för att kolla om man kommer åt endpos direkt
+        {
+            if (endFound)
+                return true;
+
+            if (instantiatedObjects[i].tag != "Blade" && instantiatedObjects[i].tag != "Fruit" && !visitedList[i] && current.GetComponentInChildren<RaycastPlayability>().isRayHittingPlatform(instantiatedObjects[i]))
+            {
+                current.GetComponentInChildren<RaycastPlayability>().isCheckingPlayability = true; //Draws the rays hit
+                if (instantiatedObjects[i].GetComponentInParent<Transform>().gameObject.tag == "End")
+                {
+                    if (instantiatedObjects[i].GetComponent<RaycastToEnd>().RetraceRaycast(current))
+                    {
+                        Debug.Log("Found End Box without vegetables");
+                        endFound = true;
+                        return true;
+
+                    }
+                    continue;
+                }
+                visitedList[i] = true;
+                CheckPlayabilityFindEndWithoutFruits(instantiatedObjects[i], visitedList, ref endFound);
+
+                if (endFound)
+                    return true;
+
+                instantiatedObjects[i].GetComponentInChildren<RaycastPlayability>().isCheckingPlayability = false; //stops drawing
+                visitedList[i] = false; //Reset position if previous path didn't find end
+            }
+        }
+        if (endFound)
+            return true;
+        return false;
+    }
+
+    /// <summary>
     /// Checks if it is possible to move from start to end with raycasting. DFS through all instatiated objects
     /// </summary>
     /// <param name="next"> Next instatiated object to raycast from</param>
     /// <param name="visitedList">List checking which locations have been visited previously</param>
     /// <param name="endFound">Reference bool checking if end has been found</param>
     /// <returns>Return 1 if endFound, else 0</returns>
-    float CheckPlayability(GameObject next, List<bool> visitedList, ref bool endFound)
+    float CheckPlayabilityWithFruits(GameObject next, List<bool> visitedList, ref bool endFound)
     {
+        if (next.tag == "Start") //Checks to see if the player can move from startPosition
+            if (!next.GetComponentInChildren<RaycastPlayabilityStartPoint>().checkStartPossible())
+                return 0;
+
         GameObject current = next;
 
         for (int i = instantiatedObjects.Count - 1; i > 0; i--) //Gå bakåt i loopen, för att kolla om man kommer åt endpos direkt
@@ -356,7 +413,7 @@ public class GE_LevelGenerator : MonoBehaviour
             if (endFound)
                 return 1;
 
-            if (current != instantiatedObjects[i] && instantiatedObjects[i].tag != "Blade" && !visitedList[i] && current.GetComponentInChildren<RaycastPlayability>().isRayHittingPlatform(instantiatedObjects[i]))
+            if (instantiatedObjects[i].tag != "Blade" && !visitedList[i] && current.GetComponentInChildren<RaycastPlayability>().isRayHittingPlatform(instantiatedObjects[i]))
             {
                 current.GetComponentInChildren<RaycastPlayability>().isCheckingPlayability = true; //Draws the rays hit
                 if (instantiatedObjects[i].GetComponentInParent<Transform>().gameObject.tag == "End")
@@ -372,7 +429,7 @@ public class GE_LevelGenerator : MonoBehaviour
                     continue;
                 }
                 visitedList[i] = true;
-                CheckPlayability(instantiatedObjects[i], visitedList, ref endFound);
+                CheckPlayabilityWithFruits(instantiatedObjects[i], visitedList, ref endFound);
 
                 if (endFound)
                     return 1;
@@ -386,24 +443,78 @@ public class GE_LevelGenerator : MonoBehaviour
         return 0f;
     }
 
+    /// <summary>
+    /// Checks how many platforms needed to visit before end found
+    /// </summary>
+    /// <param name="visitedList">List that checks how many platforms visited in DFS</param>
+    /// <returns>0.2f * platformsVisited</returns>
+    float CheckPlatformsNeeded(List<bool> visitedList)
+    {
+        int platformsVisited = 0;
+        for (int i = 0; i < visitedList.Count; i++)
+        {
+            if (visitedList[i])
+                platformsVisited++;
+        }
+
+        float returnValue = (float)0.2 * platformsVisited;
+        Debug.Log("CheckPlatformsNeeded fitness: " + (20 * returnValue) + "    Platforms: " + platformsVisited);
+
+        return returnValue;
+    }
+
+    /// <summary>
+    /// Checks how many vegetables used. The more vegetables needed, the more fitness.
+    /// Vegetables not used, removed
+    /// </summary>
+    /// <param name="visitedList"></param>
+    /// <returns>+1 * vegetables used</returns>
     float CheckVegetablesUsed(List<bool> visitedList)
     {
         int vegetablesUsed = 0;
-        int vegetablesCount = 0;
 
         for (int i = 0; i < instantiatedObjects.Count; i++)
         {
             if (instantiatedObjects[i].tag == "Fruit")
             {
-                vegetablesCount++;
                 if (visitedList[i])
+                {
                     vegetablesUsed++;
+                    continue;
+                }
+
+                Destroy(instantiatedObjects[i]); //Removes unused vegetables
+                instantiatedObjects.RemoveAt(i);
+                visitedList.RemoveAt(i);
+                i--;
             }
         }
 
-        int vegetablesUnused = vegetablesCount - vegetablesUsed;
+        float returnValue = 1 * vegetablesUsed;
+        Debug.Log("CheckVegetablesUsed fitness: " + (100 * returnValue));
 
-        return vegetablesUsed == 0 ? 1 : 0;
+        return returnValue;
+    }
+
+    /// <summary>
+    /// Checks how many blades used, add more fitness the more blades used
+    /// </summary>
+    /// <returns>+0.1 fitness/blade</returns>
+    float CheckAmountofBlades()
+    {
+        int bladeCount = 0;
+        for (int i = 0; i < instantiatedObjects.Count; i++)
+        {
+            if (instantiatedObjects[i].tag == "Blade")
+            {
+                bladeCount++;
+            }
+        }
+
+        float returnValue = (float)(0 + (0.1 * bladeCount));
+        Debug.Log("CheckAmountofBlades fitness: " + (10 * returnValue) + "    Blades: " + bladeCount);
+
+        return returnValue;
     }
 
     float CalculateFitness()
@@ -415,9 +526,27 @@ public class GE_LevelGenerator : MonoBehaviour
             visited.Add(false);
         }
         visited[0] = true;
-        float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd() + 100 * CheckPlayability(instantiatedObjects[0], visited, ref endFound) + 100 * CheckVegetablesUsed(visited);
 
-        Debug.Log(fitness);
+
+        if (CheckPlayabilityFindEndWithoutFruits(instantiatedObjects[0], visited, ref endFound))
+        {
+            Debug.Log("Total fitness: " + 60);
+            return 60; //return ok value, incase level would want to be modified manually.
+        }
+
+        for (int i = 1; i < visited.Count; i++) //reset list
+        {
+            visited[i] = false;
+        }
+        endFound = false;
+
+
+
+        float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd() +
+            100 * CheckPlayabilityWithFruits(instantiatedObjects[0], visited, ref endFound) + 20 * CheckPlatformsNeeded(visited) + 100 * CheckVegetablesUsed(visited)
+            + 10 * CheckAmountofBlades();
+
+        Debug.Log("Total fitness: " + fitness);
         return fitness;
     }
 
