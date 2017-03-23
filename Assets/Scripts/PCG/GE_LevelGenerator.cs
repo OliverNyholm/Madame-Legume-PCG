@@ -76,7 +76,7 @@ public class GE_LevelGenerator : MonoBehaviour
         InstantiateOuterWalls();
 
         oRHS = new string[3];
-        lhs = "SOFE";
+        lhs = "SOEF";
         oRHS[0] = "1";
         oRHS[1] = "2";
         oRHS[2] = "p";
@@ -87,7 +87,18 @@ public class GE_LevelGenerator : MonoBehaviour
         fRHS[2] = "B";
         fRHS[3] = "f";
 
-        GenerateLevel();
+        for (int i = 0; i < 50; i++)
+        {
+            GenerateLevel();
+        //return;
+        }
+        foreach (GameObject o in instantiatedObjects)
+        {
+            Destroy(o);
+        }
+        instantiatedObjects.Clear();
+
+        BuildBestLevel();
     }
 
     void GenerateLevel()
@@ -137,6 +148,25 @@ public class GE_LevelGenerator : MonoBehaviour
             ClearConsole();
             CalculateFitness();
             Debug.Log(lhs);
+        }
+        if (Input.GetKeyDown(KeyCode.B)) //
+        {
+            BuildBestLevel();
+        }
+        if (Input.GetKeyDown(KeyCode.N)) //
+        {
+            evolutionManager.ClearLevels();
+            for (int i = 0; i < 200; i++)
+            {
+                GenerateLevel();
+            }
+            foreach (GameObject o in instantiatedObjects)
+            {
+                Destroy(o);
+            }
+            instantiatedObjects.Clear();
+
+            BuildBestLevel();
         }
     }
 
@@ -229,7 +259,7 @@ public class GE_LevelGenerator : MonoBehaviour
                 instantiatedObjects.Add(o);
 
                 if (Random.Range(0, 11) < 5)
-                    AddSpikes(o, 0, new List<int>());
+                    AddSpikes(o, 0, new List<int>(), i);
             }
             if (lhs[i] == '2')
             {
@@ -238,8 +268,11 @@ public class GE_LevelGenerator : MonoBehaviour
                 instantiatedObjects.Add(o);
 
                 if (Random.Range(0, 11) < 5)
-                    AddSpikes(o, 0, new List<int>());
+                    AddSpikes(o, 0, new List<int>(), i);
             }
+
+            if (lhs[i] == 'b') //blade
+                continue;
             #endregion
 
             #region Fruits
@@ -247,6 +280,15 @@ public class GE_LevelGenerator : MonoBehaviour
             {
                 randomStartPosition = new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY, bottomEdgeY + heightOffset));
                 GameObject o = Instantiate(fruits[0], randomStartPosition + getObjectOffset(lhs[i]), fruits[0].transform.rotation);
+
+                int saviour = 0;
+                while (Physics2D.OverlapAreaAll(o.GetComponent<Collider2D>().bounds.min, o.GetComponent<Collider2D>().bounds.max).Length > 2 || saviour < 10)
+                {
+                    Destroy(o);
+                    randomStartPosition = new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY, bottomEdgeY + heightOffset));
+                    o = Instantiate(fruits[0], randomStartPosition + getObjectOffset(lhs[i]), fruits[0].transform.rotation);
+                    saviour++;
+                }
                 instantiatedObjects.Add(o);
 
             }
@@ -254,6 +296,15 @@ public class GE_LevelGenerator : MonoBehaviour
             {
                 randomStartPosition = new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY, bottomEdgeY + heightOffset));
                 GameObject o = Instantiate(fruits[1], randomStartPosition + getObjectOffset(lhs[i]), fruits[1].transform.rotation);
+
+                int saviour = 0;
+                while (Physics2D.OverlapAreaAll(o.GetComponent<Collider2D>().bounds.min, o.GetComponent<Collider2D>().bounds.max).Length > 1 || saviour < 10)
+                {
+                    Destroy(o);
+                    randomStartPosition = new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY, bottomEdgeY + heightOffset));
+                    o = Instantiate(fruits[1], randomStartPosition + getObjectOffset(lhs[i]), fruits[1].transform.rotation);
+                    saviour++;
+                }
                 instantiatedObjects.Add(o);
 
             }
@@ -261,6 +312,15 @@ public class GE_LevelGenerator : MonoBehaviour
             {
                 randomStartPosition = new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY, bottomEdgeY + heightOffset));
                 GameObject o = Instantiate(fruits[2], randomStartPosition + getObjectOffset(lhs[i]), fruits[2].transform.rotation);
+
+                //int saviour = 0;
+                //while (Physics2D.OverlapAreaAll(o.GetComponent<Collider2D>().bounds.min, o.GetComponent<Collider2D>().bounds.max).Length > 4 || saviour < 100)
+                //{
+                //    Destroy(o);
+                //    randomStartPosition = new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY, bottomEdgeY + heightOffset));
+                //    o = Instantiate(fruits[2], randomStartPosition + getObjectOffset(lhs[i]), fruits[2].transform.rotation);
+                //    saviour++;
+                //}
                 instantiatedObjects.Add(o);
 
             }
@@ -277,7 +337,77 @@ public class GE_LevelGenerator : MonoBehaviour
         }
     }
 
-    void AddSpikes(GameObject platform, int spikeCount, List<int> spikePositionsCreated)
+    void BuildBestLevel()
+    {
+        ClearConsole();
+        Level bestLevel = evolutionManager.CreateBestLevel();
+        Debug.Log(bestLevel.LHS);
+
+        for (int i = 0; i < bestLevel.LHS.Length; i++)
+        {
+            if (bestLevel.LHS[i] == 'S')
+            {
+                GameObject o = Instantiate(platforms[0], bestLevel.objectPositions[i].position, platforms[0].transform.rotation);
+                instantiatedObjects.Add(o);
+                startPosition = (bestLevel.objectPositions[i].position - new Vector3(getObjectOffset(lhs[0]).x, 0, 0)) + new Vector3(1, 1, 0);
+                startPlatformEndPoint = o.GetComponent<RoomEndPoint>().GetEndPosition();
+            }
+            #region Platforms
+            if (bestLevel.LHS[i] == '1')
+            {
+                GameObject o = Instantiate(platforms[1], bestLevel.objectPositions[i].position, platforms[1].transform.rotation);
+                instantiatedObjects.Add(o);
+
+            }
+            if (bestLevel.LHS[i] == '2')
+            {
+                GameObject o = Instantiate(platforms[2], bestLevel.objectPositions[i].position, platforms[2].transform.rotation);
+                instantiatedObjects.Add(o);
+
+            }
+            if (bestLevel.LHS[i] == 'b') //blade
+            {
+                GameObject o = Instantiate(spike, bestLevel.objectPositions[i].position, bestLevel.objectPositions[i].rotation);
+                instantiatedObjects.Add(o);
+            }
+            #endregion
+
+            #region Fruits
+            if (bestLevel.LHS[i] == 'C')
+            {
+                GameObject o = Instantiate(fruits[0], bestLevel.objectPositions[i].position, fruits[0].transform.rotation);
+                instantiatedObjects.Add(o);
+
+            }
+            if (bestLevel.LHS[i] == 'T')
+            {
+                GameObject o = Instantiate(fruits[1], bestLevel.objectPositions[i].position, fruits[1].transform.rotation);
+                instantiatedObjects.Add(o);
+
+            }
+            if (bestLevel.LHS[i] == 'B')
+            {
+                GameObject o = Instantiate(fruits[2], bestLevel.objectPositions[i].position, fruits[2].transform.rotation);
+                instantiatedObjects.Add(o);
+
+            }
+            #endregion
+
+            if (bestLevel.LHS[i] == 'E')
+            {
+                GameObject o = Instantiate(platforms[3], bestLevel.objectPositions[i].position, platforms[3].transform.rotation);
+                instantiatedObjects.Add(o);
+
+                endPlatformPosition = o.GetComponentInChildren<Transform>().FindChild("End").position;
+            }
+
+
+        }
+        lhs = bestLevel.LHS;
+        CalculateFitness();
+    }
+
+    void AddSpikes(GameObject platform, int spikeCount, List<int> spikePositionsCreated, int lhsPos)
     {
         List<int> spikePositionsList = spikePositionsCreated;
         if (Random.Range(0, 11) < spikeChance && spikeCount != 14)
@@ -288,10 +418,12 @@ public class GE_LevelGenerator : MonoBehaviour
 
             GameObject o = Instantiate(spike, platform.GetComponent<RoomEndPoint>().getSpikePosition(spikePosition).position, platform.GetComponent<RoomEndPoint>().getSpikePosition(spikePosition).rotation);
             instantiatedObjects.Add(o);
+            lhs = lhs.Insert(lhsPos + 1, "b");
 
             spikeCount++;
+            lhsPos++;
             spikePositionsList.Add(spikePosition);
-            AddSpikes(platform, spikeCount, spikePositionsList);
+            AddSpikes(platform, spikeCount, spikePositionsList, lhsPos);
         }
     }
 
@@ -359,6 +491,12 @@ public class GE_LevelGenerator : MonoBehaviour
 
         GameObject current = next;
 
+        for (int i = 0; i < instantiatedObjects.Count; i++)
+        {
+            if (instantiatedObjects[i].tag == "Fruit")
+                instantiatedObjects[i].SetActive(false);
+        }
+
         for (int i = instantiatedObjects.Count - 1; i > 0; i--) //Gå bakåt i loopen, för att kolla om man kommer åt endpos direkt
         {
             if (endFound)
@@ -388,6 +526,13 @@ public class GE_LevelGenerator : MonoBehaviour
                 visitedList[i] = false; //Reset position if previous path didn't find end
             }
         }
+
+        for (int i = 0; i < instantiatedObjects.Count; i++)
+        {
+            if (instantiatedObjects[i].tag == "Fruit")
+                instantiatedObjects[i].SetActive(true);
+        }
+
         if (endFound)
             return true;
         return false;
@@ -486,12 +631,13 @@ public class GE_LevelGenerator : MonoBehaviour
                 Destroy(instantiatedObjects[i]); //Removes unused vegetables
                 instantiatedObjects.RemoveAt(i);
                 visitedList.RemoveAt(i);
+                lhs = lhs.Remove(i, 1);
                 i--;
             }
         }
 
         float returnValue = 1 * vegetablesUsed;
-        Debug.Log("CheckVegetablesUsed fitness: " + (100 * returnValue));
+        Debug.Log("CheckVegetablesUsed fitness: " + (100 * returnValue) + "      Vegetables used: " + vegetablesUsed);
 
         return returnValue;
     }
@@ -543,8 +689,8 @@ public class GE_LevelGenerator : MonoBehaviour
 
 
         float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd() +
-            100 * CheckPlayabilityWithFruits(instantiatedObjects[0], visited, ref endFound) + 20 * CheckPlatformsNeeded(visited) + 100 * CheckVegetablesUsed(visited)
-            + 10 * CheckAmountofBlades();
+         100 * CheckPlayabilityWithFruits(instantiatedObjects[0], visited, ref endFound) + 20 * CheckPlatformsNeeded(visited) + 100 * CheckVegetablesUsed(visited)
+         + 10 * CheckAmountofBlades();
 
         Debug.Log("Total fitness: " + fitness);
         return fitness;
