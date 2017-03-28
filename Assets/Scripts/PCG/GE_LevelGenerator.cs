@@ -87,7 +87,7 @@ public class GE_LevelGenerator : MonoBehaviour
         fRHS[2] = "B";
         fRHS[3] = "f";
 
-        for (int i = 0; i < 50; i++)
+        for (int i = 0; i < 100; i++)
         {
             GenerateLevel();
         //return;
@@ -109,7 +109,7 @@ public class GE_LevelGenerator : MonoBehaviour
         }
         instantiatedObjects.Clear();
         fitness = 0;
-        lhs = "SOFE";
+        lhs = "SOEF";
         ReadLHS();
         BuildLevel();
         fitness = CalculateFitness();
