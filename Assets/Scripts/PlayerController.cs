@@ -203,6 +203,13 @@ public class PlayerController : MonoBehaviour
         vegetableCount[2] = levelData.bananas;
     }
 
+    public void GetVegetables(int carrots, int tomatos, int bananas)
+    {
+        vegetableCount[0] = carrots;
+        vegetableCount[1] = tomatos;
+        vegetableCount[2] = bananas;
+    }
+
 
     /// <summary>
     /// ----------- Check if on ground -----------
