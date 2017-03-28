@@ -92,11 +92,6 @@ public class GE_LevelGenerator : MonoBehaviour
             GenerateLevel();
         //return;
         }
-        foreach (GameObject o in instantiatedObjects)
-        {
-            Destroy(o);
-        }
-        instantiatedObjects.Clear();
 
         BuildBestLevel();
     }
@@ -343,7 +338,15 @@ public class GE_LevelGenerator : MonoBehaviour
     void BuildBestLevel()
     {
         ClearConsole();
+
         Level bestLevel = evolutionManager.CreateBestLevel();
+
+        foreach (GameObject o in instantiatedObjects)
+        {
+            Destroy(o);
+        }
+        instantiatedObjects.Clear();
+
         Debug.Log(bestLevel.LHS);
 
         for (int i = 0; i < bestLevel.LHS.Length; i++)
@@ -408,6 +411,82 @@ public class GE_LevelGenerator : MonoBehaviour
         }
         lhs = bestLevel.LHS;
         CalculateFitness();
+    }
+
+    public float GetCandiateFitness(Level candidate)
+    {
+        ClearConsole();
+        foreach (GameObject o in instantiatedObjects)
+        {
+            Destroy(o);
+        }
+        instantiatedObjects.Clear();
+
+        Level individual = candidate;
+
+        for (int i = 0; i < individual.LHS.Length; i++)
+        {
+            if (individual.LHS[i] == 'S')
+            {
+                GameObject o = Instantiate(platforms[0], individual.objectPositions[i].position, platforms[0].transform.rotation);
+                instantiatedObjects.Add(o);
+                startPosition = (individual.objectPositions[i].position - new Vector3(getObjectOffset(lhs[0]).x, 0, 0)) + new Vector3(1, 1, 0);
+                startPlatformEndPoint = o.GetComponent<RoomEndPoint>().GetEndPosition();
+            }
+            #region Platforms
+            if (individual.LHS[i] == '1')
+            {
+                GameObject o = Instantiate(platforms[1], individual.objectPositions[i].position, platforms[1].transform.rotation);
+                instantiatedObjects.Add(o);
+
+            }
+            if (individual.LHS[i] == '2')
+            {
+                GameObject o = Instantiate(platforms[2], individual.objectPositions[i].position, platforms[2].transform.rotation);
+                instantiatedObjects.Add(o);
+
+            }
+            if (individual.LHS[i] == 'b') //blade
+            {
+                GameObject o = Instantiate(spike, individual.objectPositions[i].position, individual.objectPositions[i].rotation);
+                instantiatedObjects.Add(o);
+            }
+            #endregion
+
+            #region Fruits
+            if (individual.LHS[i] == 'C')
+            {
+                GameObject o = Instantiate(fruits[0], individual.objectPositions[i].position, fruits[0].transform.rotation);
+                instantiatedObjects.Add(o);
+
+            }
+            if (individual.LHS[i] == 'T')
+            {
+                GameObject o = Instantiate(fruits[1], individual.objectPositions[i].position, fruits[1].transform.rotation);
+                instantiatedObjects.Add(o);
+
+            }
+            if (individual.LHS[i] == 'B')
+            {
+                GameObject o = Instantiate(fruits[2], individual.objectPositions[i].position, fruits[2].transform.rotation);
+                instantiatedObjects.Add(o);
+
+            }
+            #endregion
+
+            if (individual.LHS[i] == 'E')
+            {
+                GameObject o = Instantiate(platforms[3], individual.objectPositions[i].position, platforms[3].transform.rotation);
+                instantiatedObjects.Add(o);
+
+                endPlatformPosition = o.GetComponentInChildren<Transform>().FindChild("End").position;
+            }
+
+
+        }
+
+        lhs = individual.LHS;
+        return CalculateFitness();
     }
 
     void AddSpikes(GameObject platform, int spikeCount, List<int> spikePositionsCreated, int lhsPos)

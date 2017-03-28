@@ -48,7 +48,9 @@ public class EvolutionManager : MonoBehaviour
     {
         generatedLevels = TournamentSelection();
         CreateNewPopulation();
-        //Build levels for last 50 and calculate fitness
+        for (int i = 50; i < generatedLevels.Count; ++i)
+            generatedLevels[i].fitness = gameObject.GetComponent<GE_LevelGenerator>().GetCandiateFitness(generatedLevels[i]);
+
         generatedLevels.Sort(SortByFitness);
         generatedLevels.Reverse();
         
@@ -102,7 +104,7 @@ public class EvolutionManager : MonoBehaviour
         child1.LHS = child1.LHS.Insert(child1.LHS.IndexOf('E') + 1, mom.LHS.Substring(mom.LHS.IndexOf('E') + 1, mom.LHS.IndexOf('E') + fruitPosMom));
         child1.objectPositions.RemoveRange(child1.LHS.IndexOf('E') + 1, child1.LHS.IndexOf('E') + fruitPosDad + 1);
         child1.objectPositions.InsertRange(child1.LHS.IndexOf('E') + 1, mom.objectPositions.GetRange(mom.LHS.IndexOf('E') + 1, mom.LHS.IndexOf('E') + fruitPosMom));
-    }
+    } // not working, not used. YET
 
     void CrossOver(Level dad, Level mom) //Uniform
     {
