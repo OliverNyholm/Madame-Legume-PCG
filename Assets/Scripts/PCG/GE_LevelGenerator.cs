@@ -142,6 +142,9 @@ public class GE_LevelGenerator : MonoBehaviour
             character.GetComponentInChildren<Camera>().enabled = true;
             mainCamera.SetActive(false);
         }
+        if (Input.GetKeyDown(KeyCode.L))
+            GiveFruitsToPlayer();
+
 
         if (Input.GetKeyDown(KeyCode.P)) //
         {
@@ -281,14 +284,14 @@ public class GE_LevelGenerator : MonoBehaviour
                 randomStartPosition = new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY, bottomEdgeY + heightOffset));
                 GameObject o = Instantiate(fruits[0], randomStartPosition + getObjectOffset(lhs[i]), fruits[0].transform.rotation);
 
-                int saviour = 0;
-                while (Physics2D.OverlapAreaAll(o.GetComponent<Collider2D>().bounds.min, o.GetComponent<Collider2D>().bounds.max).Length > 2 || saviour < 10)
-                {
-                    Destroy(o);
-                    randomStartPosition = new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY, bottomEdgeY + heightOffset));
-                    o = Instantiate(fruits[0], randomStartPosition + getObjectOffset(lhs[i]), fruits[0].transform.rotation);
-                    saviour++;
-                }
+                //int saviour = 0;
+                //while (Physics2D.OverlapAreaAll(o.GetComponent<Collider2D>().bounds.min, o.GetComponent<Collider2D>().bounds.max).Length > 2 || saviour < 10)
+                //{
+                //    Destroy(o);
+                //    randomStartPosition = new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY, bottomEdgeY + heightOffset));
+                //    o = Instantiate(fruits[0], randomStartPosition + getObjectOffset(lhs[i]), fruits[0].transform.rotation);
+                //    saviour++;
+                //}
                 instantiatedObjects.Add(o);
 
             }
@@ -297,14 +300,14 @@ public class GE_LevelGenerator : MonoBehaviour
                 randomStartPosition = new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY, bottomEdgeY + heightOffset));
                 GameObject o = Instantiate(fruits[1], randomStartPosition + getObjectOffset(lhs[i]), fruits[1].transform.rotation);
 
-                int saviour = 0;
-                while (Physics2D.OverlapAreaAll(o.GetComponent<Collider2D>().bounds.min, o.GetComponent<Collider2D>().bounds.max).Length > 1 || saviour < 10)
-                {
-                    Destroy(o);
-                    randomStartPosition = new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY, bottomEdgeY + heightOffset));
-                    o = Instantiate(fruits[1], randomStartPosition + getObjectOffset(lhs[i]), fruits[1].transform.rotation);
-                    saviour++;
-                }
+                //int saviour = 0;
+                //while (Physics2D.OverlapAreaAll(o.GetComponent<Collider2D>().bounds.min, o.GetComponent<Collider2D>().bounds.max).Length > 1 || saviour < 10)
+                //{
+                //    Destroy(o);
+                //    randomStartPosition = new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY, bottomEdgeY + heightOffset));
+                //    o = Instantiate(fruits[1], randomStartPosition + getObjectOffset(lhs[i]), fruits[1].transform.rotation);
+                //    saviour++;
+                //}
                 instantiatedObjects.Add(o);
 
             }
@@ -609,14 +612,16 @@ public class GE_LevelGenerator : MonoBehaviour
     }
 
     /// <summary>
-    /// Checks how many vegetables used. The more vegetables needed, the more fitness.
-    /// Vegetables not used, removed
+    /// Checks how many vegetables used. The more vegetables needed, the more fitness. 
+    /// More fitness if tomatos or bananas used.
+    /// Vegetables not used are removed
     /// </summary>
     /// <param name="visitedList"></param>
     /// <returns>+1 * vegetables used</returns>
     float CheckVegetablesUsed(List<bool> visitedList)
     {
         int vegetablesUsed = 0;
+        int notCarrotCount = 0; //+ more if tomatos and bananas
 
         for (int i = 0; i < instantiatedObjects.Count; i++)
         {
@@ -625,6 +630,8 @@ public class GE_LevelGenerator : MonoBehaviour
                 if (visitedList[i])
                 {
                     vegetablesUsed++;
+                    if (lhs[i] == 'T' || lhs[i] == 'B')
+                        notCarrotCount++;
                     continue;
                 }
 
@@ -636,10 +643,55 @@ public class GE_LevelGenerator : MonoBehaviour
             }
         }
 
-        float returnValue = 1 * vegetablesUsed;
+        float returnValue = 1 * vegetablesUsed + notCarrotCount * 0.2f;
         Debug.Log("CheckVegetablesUsed fitness: " + (100 * returnValue) + "      Vegetables used: " + vegetablesUsed);
 
         return returnValue;
+    }
+
+   /// <summary>
+   /// Checks is vegetables are colliding with platform or other vegetables
+   /// </summary>
+   /// <returns>returns 1 if no vegetable is colliding with anything, else 0</returns>
+    float CheckVegetablesColliding()
+    {
+        int vegetablesCount = 0;
+        int vegetablesNotIntersected = 0;
+        for(int i = 0; i < instantiatedObjects.Count; ++i)
+        {
+            if(lhs[i] == 'C')
+            {
+                vegetablesCount++;
+                if (Physics2D.OverlapAreaAll(instantiatedObjects[i].GetComponent<Collider2D>().bounds.min, instantiatedObjects[i].GetComponent<Collider2D>().bounds.max).Length <= 2)
+                    vegetablesNotIntersected++;
+            }
+            else if (lhs[i] == 'T')
+            {
+                vegetablesCount++;
+                if (Physics2D.OverlapAreaAll(instantiatedObjects[i].GetComponent<Collider2D>().bounds.min, instantiatedObjects[i].GetComponent<Collider2D>().bounds.max).Length <= 1)
+                    vegetablesNotIntersected++;
+            }
+            else if(lhs[i] == 'B')
+            {
+                vegetablesCount++;
+                if (Physics2D.OverlapAreaAll(instantiatedObjects[i].GetComponent<Collider2D>().bounds.min, instantiatedObjects[i].GetComponent<Collider2D>().bounds.max).Length <= 4)
+                    vegetablesNotIntersected++;
+            }
+        }
+
+        if (vegetablesCount == 0) 
+        {
+            Debug.Log("CheckVegetablesColliding fitness: " + 0);
+            return 0;
+        }
+
+        if (vegetablesCount - vegetablesNotIntersected == 0)
+        {
+            Debug.Log("CheckVegetablesColliding fitness: " + (50 * 1));
+            return 1f;
+        }
+        Debug.Log("CheckVegetablesColliding fitness: " + 0);
+        return 0;
     }
 
     /// <summary>
@@ -689,11 +741,39 @@ public class GE_LevelGenerator : MonoBehaviour
 
 
         float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd() +
-         100 * CheckPlayabilityWithFruits(instantiatedObjects[0], visited, ref endFound) + 20 * CheckPlatformsNeeded(visited) + 100 * CheckVegetablesUsed(visited)
+         100 * CheckPlayabilityWithFruits(instantiatedObjects[0], visited, ref endFound) + 20 * CheckPlatformsNeeded(visited) + 100 * CheckVegetablesUsed(visited) + 50 * CheckVegetablesColliding()
          + 10 * CheckAmountofBlades();
 
         Debug.Log("Total fitness: " + fitness);
         return fitness;
+    }
+
+    void GiveFruitsToPlayer()
+    {
+        int carrots, tomatos, bananas;
+        carrots = tomatos = bananas = 0;
+
+        for (int i = 0; i < lhs.Length; i++)
+        {
+            if (lhs[i] == 'C')
+            {
+                Destroy(instantiatedObjects[i]);
+                carrots++;
+            }
+            if (lhs[i] == 'T')
+            {
+                Destroy(instantiatedObjects[i]);
+                tomatos++;
+            }
+            if (lhs[i] == 'B')
+            {
+                Destroy(instantiatedObjects[i]);
+                bananas++;
+            }
+        }
+
+        character.GetComponent<PlayerController>().GetVegetables(carrots, tomatos, bananas);
+        GameObject.Find("LevelData").GetComponent<LevelData>().SetData(carrots, tomatos, bananas);
     }
 
     Vector2 getObjectOffset(char index)

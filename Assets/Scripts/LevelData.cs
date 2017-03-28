@@ -23,4 +23,13 @@ public class LevelData : MonoBehaviour {
         levelText.text = SceneManager.GetActiveScene().name;
         vegetableText.text = "Carrots: " + carrots + "   Tomatos: " + tomatos + "   Bananas: " + bananas;
     }
+
+    public void SetData(int carrots, int tomatos, int bananas)
+    {
+        this.carrots = carrots;
+        this.tomatos = tomatos;
+        this.bananas = bananas;
+
+        vegetableText.text = "Carrots: " + carrots + "   Tomatos: " + tomatos + "   Bananas: " + bananas;
+    }
 }
