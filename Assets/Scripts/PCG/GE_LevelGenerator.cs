@@ -820,8 +820,8 @@ public class GE_LevelGenerator : MonoBehaviour
 
 
         float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd() +
-         100 * CheckPlayabilityWithFruits(instantiatedObjects[0], visited, ref endFound) + 20 * CheckPlatformsNeeded(visited) + 100 * CheckVegetablesUsed(visited) + 50 * CheckVegetablesColliding()
-         + 10 * CheckAmountofBlades();
+         100 * CheckPlayabilityWithFruits(instantiatedObjects[0], visited, ref endFound) + 20 * CheckPlatformsNeeded(visited) + 100 * CheckVegetablesUsed(visited) + 50 * CheckVegetablesColliding();
+         //+ 10 * CheckAmountofBlades();
 
         Debug.Log("Total fitness: " + fitness);
         return fitness;

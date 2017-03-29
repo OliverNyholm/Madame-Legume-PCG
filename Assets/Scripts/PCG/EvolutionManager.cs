@@ -46,14 +46,18 @@ public class EvolutionManager : MonoBehaviour
 
     public Level CreateBestLevel()
     {
-        generatedLevels = TournamentSelection();
-        CreateNewPopulation();
-        for (int i = 50; i < generatedLevels.Count; ++i)
-            generatedLevels[i].fitness = gameObject.GetComponent<GE_LevelGenerator>().GetCandiateFitness(generatedLevels[i]);
+        for (int j = 0; j < 25; ++j)
+        {
+
+            generatedLevels = TournamentSelection();
+            CreateNewPopulation();
+            for (int i = 50; i < generatedLevels.Count; ++i)
+                generatedLevels[i].fitness = gameObject.GetComponent<GE_LevelGenerator>().GetCandiateFitness(generatedLevels[i]);
+
+        }
 
         generatedLevels.Sort(SortByFitness);
         generatedLevels.Reverse();
-        
 
         Level best = generatedLevels[0];
         return best;
@@ -64,7 +68,7 @@ public class EvolutionManager : MonoBehaviour
         List<Level> tempList = new List<Level>();
         tempList.AddRange(generatedLevels.GetRange(0, generatedLevels.Count));
 
-        while(tempList.Count != 0)
+        while (tempList.Count != 0)
         {
             int randomPos1 = Random.Range(0, tempList.Count);
 
@@ -82,7 +86,8 @@ public class EvolutionManager : MonoBehaviour
             Level temp2 = tempList[randomPos2];
             tempList.RemoveAt(randomPos2);
 
-            CrossOver(temp1, temp2);
+            //CrossOver(temp1, temp2);
+            OnePointCrossover(temp1, temp2);
         }
     }
 
@@ -106,10 +111,59 @@ public class EvolutionManager : MonoBehaviour
         child1.objectPositions.InsertRange(child1.LHS.IndexOf('E') + 1, mom.objectPositions.GetRange(mom.LHS.IndexOf('E') + 1, mom.LHS.IndexOf('E') + fruitPosMom));
     } // not working, not used. YET
 
+    void OnePointCrossover(Level dad, Level mom)
+    {
+        int dadCrossoverPoint = Random.Range(1, dad.LHS.Length);
+        while (dad.LHS[dadCrossoverPoint] == 'b')
+            dadCrossoverPoint = Random.Range(1, dad.LHS.Length);
+
+        int momCrossoverPoint;
+        if (dad.LHS.IndexOf('E') >= dadCrossoverPoint) //If dads crossover is before the E, don't let mothers crossover be after E, creating children with 2 and 0 end platforms.
+        {
+            momCrossoverPoint = Random.Range(1, mom.LHS.IndexOf('E') + 1);
+            while (mom.LHS[momCrossoverPoint] == 'b')
+                momCrossoverPoint = Random.Range(1, mom.LHS.IndexOf('E') + 1);
+        }
+        else
+        {
+            if (mom.LHS.Length == mom.LHS.IndexOf('E') + 1)
+                momCrossoverPoint = mom.LHS.Length - 1;
+            else
+                momCrossoverPoint = Random.Range(mom.LHS.IndexOf('E') + 1, mom.LHS.Length); //No blades after endpoint
+        }
+
+
+
+        Level child1 = new Level(); //Set first child to fathers' genes
+        child1.LHS = dad.LHS;
+        child1.objectPositions = new List<Transform>();
+        for (int i = 0; i < dad.objectPositions.Count; ++i) //Need to manually add them because else they reference to the same thing....
+            child1.objectPositions.Add(dad.objectPositions[i]);
+
+        child1.LHS = child1.LHS.Remove(dadCrossoverPoint); //Start crossover to set end genes to mothers'
+        child1.LHS = child1.LHS.Insert(dadCrossoverPoint, mom.LHS.Substring(momCrossoverPoint, mom.LHS.Length - momCrossoverPoint));
+        child1.objectPositions.RemoveRange(dadCrossoverPoint, dad.objectPositions.Count - dadCrossoverPoint);
+        child1.objectPositions.AddRange(mom.objectPositions.GetRange(momCrossoverPoint, mom.objectPositions.Count - momCrossoverPoint));
+
+        Level child2 = new Level(); //Set second child to mothers' genes
+        child2.LHS = mom.LHS;
+        child2.objectPositions = new List<Transform>();
+        for (int i = 0; i < mom.objectPositions.Count; ++i)
+            child2.objectPositions.Add(mom.objectPositions[i]);
+
+        child2.LHS = child2.LHS.Remove(momCrossoverPoint); //Start crossover to set end genes to fathers'
+        child2.LHS = child2.LHS.Insert(momCrossoverPoint, dad.LHS.Substring(dadCrossoverPoint, dad.LHS.Length - dadCrossoverPoint));
+        child2.objectPositions.RemoveRange(momCrossoverPoint, mom.objectPositions.Count - momCrossoverPoint);
+        child2.objectPositions.AddRange(dad.objectPositions.GetRange(dadCrossoverPoint, dad.objectPositions.Count - dadCrossoverPoint));
+
+        generatedLevels.Add(child1);
+        generatedLevels.Add(child2);
+    }
+
     void CrossOver(Level dad, Level mom) //Uniform
     {
         int platformPos1 = Random.Range(1, dad.LHS.IndexOf('E'));
-        while(dad.LHS[platformPos1] == 'b')
+        while (dad.LHS[platformPos1] == 'b')
             platformPos1 = Random.Range(1, dad.LHS.IndexOf('E'));
 
         int platformPos2 = Random.Range(1, mom.LHS.IndexOf('E'));
@@ -147,7 +201,7 @@ public class EvolutionManager : MonoBehaviour
     {
         List<Level> bestPopulation = new List<Level>();
 
-        while(generatedLevels.Count != 0)
+        while (generatedLevels.Count != 0)
         {
             int randomPos1 = Random.Range(0, generatedLevels.Count);
 
