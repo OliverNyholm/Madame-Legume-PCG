@@ -51,6 +51,8 @@ public class GE_LevelGenerator : MonoBehaviour
     private Vector2 startPlatformEndPoint, endPlatformPosition;
 
     private List<GameObject> instantiatedObjects = new List<GameObject>();
+    private List<Level> bestTenLevels = new List<Level>();
+    private int populationSize, populationPos;
 
     private GameObject boardHolder;
 
@@ -71,6 +73,8 @@ public class GE_LevelGenerator : MonoBehaviour
         boardHolder = new GameObject("BoardHolder");
         width = 30;
         height = 25;
+        populationSize = 100;
+        populationPos = 0;
         widthOffset = platforms[1].GetComponent<RoomEndPoint>().GetObjectWidth();
         heightOffset = platforms[2].GetComponent<RoomEndPoint>().GetObjectHeight();
         InstantiateOuterWalls();
@@ -87,13 +91,20 @@ public class GE_LevelGenerator : MonoBehaviour
         fRHS[2] = "B";
         fRHS[3] = "f";
 
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < populationSize; i++)
         {
             GenerateLevel();
-        //return;
+            //return;
         }
 
-        BuildBestLevel();
+        Level bestLevel = evolutionManager.CreateBestLevel();
+        BuildBestLevel(bestLevel);
+
+        bestTenLevels.Add(bestLevel);
+        for (int i = 1; i < 10; ++i)
+        {
+            bestTenLevels.Add(evolutionManager.GetLevel(i));
+        }
     }
 
     void GenerateLevel()
@@ -147,14 +158,11 @@ public class GE_LevelGenerator : MonoBehaviour
             CalculateFitness();
             Debug.Log(lhs);
         }
-        if (Input.GetKeyDown(KeyCode.B)) //
-        {
-            BuildBestLevel();
-        }
+
         if (Input.GetKeyDown(KeyCode.N)) //
         {
             evolutionManager.ClearLevels();
-            for (int i = 0; i < 200; i++)
+            for (int i = 0; i < populationSize; i++)
             {
                 GenerateLevel();
             }
@@ -164,7 +172,15 @@ public class GE_LevelGenerator : MonoBehaviour
             }
             instantiatedObjects.Clear();
 
-            BuildBestLevel();
+            populationPos = 0;
+            Level bestLevel = evolutionManager.CreateBestLevel();
+            BuildBestLevel(bestLevel);
+        }
+
+        if (Input.GetKeyDown(KeyCode.B)) //
+        {
+            populationPos++;
+            BuildBestLevel(bestTenLevels[populationPos]); //funkar inte.... transformlistorna i Level deletas efter start är färdigt
         }
     }
 
@@ -335,11 +351,9 @@ public class GE_LevelGenerator : MonoBehaviour
         }
     }
 
-    void BuildBestLevel()
+    void BuildBestLevel(Level bestLevel)
     {
         ClearConsole();
-
-        Level bestLevel = evolutionManager.CreateBestLevel();
 
         foreach (GameObject o in instantiatedObjects)
         {
@@ -728,17 +742,17 @@ public class GE_LevelGenerator : MonoBehaviour
         return returnValue;
     }
 
-   /// <summary>
-   /// Checks is vegetables are colliding with platform or other vegetables
-   /// </summary>
-   /// <returns>returns 1 if no vegetable is colliding with anything, else 0</returns>
+    /// <summary>
+    /// Checks is vegetables are colliding with platform or other vegetables
+    /// </summary>
+    /// <returns>returns 1 if no vegetable is colliding with anything, else 0</returns>
     float CheckVegetablesColliding()
     {
         int vegetablesCount = 0;
         int vegetablesNotIntersected = 0;
-        for(int i = 0; i < instantiatedObjects.Count; ++i)
+        for (int i = 0; i < instantiatedObjects.Count; ++i)
         {
-            if(lhs[i] == 'C')
+            if (lhs[i] == 'C')
             {
                 vegetablesCount++;
                 if (Physics2D.OverlapAreaAll(instantiatedObjects[i].GetComponent<Collider2D>().bounds.min, instantiatedObjects[i].GetComponent<Collider2D>().bounds.max).Length <= 2)
@@ -750,7 +764,7 @@ public class GE_LevelGenerator : MonoBehaviour
                 if (Physics2D.OverlapAreaAll(instantiatedObjects[i].GetComponent<Collider2D>().bounds.min, instantiatedObjects[i].GetComponent<Collider2D>().bounds.max).Length <= 1)
                     vegetablesNotIntersected++;
             }
-            else if(lhs[i] == 'B')
+            else if (lhs[i] == 'B')
             {
                 vegetablesCount++;
                 if (Physics2D.OverlapAreaAll(instantiatedObjects[i].GetComponent<Collider2D>().bounds.min, instantiatedObjects[i].GetComponent<Collider2D>().bounds.max).Length <= 4)
@@ -758,7 +772,7 @@ public class GE_LevelGenerator : MonoBehaviour
             }
         }
 
-        if (vegetablesCount == 0) 
+        if (vegetablesCount == 0)
         {
             Debug.Log("CheckVegetablesColliding fitness: " + 0);
             return 0;
@@ -821,7 +835,7 @@ public class GE_LevelGenerator : MonoBehaviour
 
         float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd() +
          100 * CheckPlayabilityWithFruits(instantiatedObjects[0], visited, ref endFound) + 20 * CheckPlatformsNeeded(visited) + 100 * CheckVegetablesUsed(visited) + 50 * CheckVegetablesColliding();
-         //+ 10 * CheckAmountofBlades();
+        //+ 10 * CheckAmountofBlades();
 
         Debug.Log("Total fitness: " + fitness);
         return fitness;

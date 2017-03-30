@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-public class Level
+public class Level : MonoBehaviour
 {
     public string LHS;
     public List<Transform> objectPositions;
@@ -17,6 +17,11 @@ public class EvolutionManager : MonoBehaviour
 
     // Use this for initialization
     void Start()
+    {
+
+    }
+
+    void Awake()
     {
 
     }
@@ -46,7 +51,7 @@ public class EvolutionManager : MonoBehaviour
 
     public Level CreateBestLevel()
     {
-        for (int j = 0; j < 25; ++j)
+        for (int j = 0; j < 5; ++j)
         {
 
             generatedLevels = TournamentSelection();
@@ -61,6 +66,12 @@ public class EvolutionManager : MonoBehaviour
 
         Level best = generatedLevels[0];
         return best;
+    }
+
+    public Level GetLevel(int index)
+    {
+        Level level = generatedLevels[index];
+        return level;
     }
 
     void CreateNewPopulation()
@@ -86,8 +97,8 @@ public class EvolutionManager : MonoBehaviour
             Level temp2 = tempList[randomPos2];
             tempList.RemoveAt(randomPos2);
 
-            //CrossOver(temp1, temp2);
-            OnePointCrossover(temp1, temp2);
+            CrossOver(temp1, temp2);
+            //OnePointCrossover(temp1, temp2);
         }
     }
 
@@ -179,7 +190,11 @@ public class EvolutionManager : MonoBehaviour
 
     Level SwitchGenes(Level parent1, Level parent2, int childIndex, int parentIndex)
     {
-        Level child = parent1;
+        Level child = new Level(); //Set first child to fathers' genes
+        child.LHS = parent1.LHS;
+        child.objectPositions = new List<Transform>();
+        for (int i = 0; i < parent1.objectPositions.Count; ++i) //Need to manually add them because else they reference to the same thing....
+            child.objectPositions.Add(parent1.objectPositions[i]);
 
         int removeLength = 1;
         while (child.LHS[childIndex + removeLength] == 'b')
