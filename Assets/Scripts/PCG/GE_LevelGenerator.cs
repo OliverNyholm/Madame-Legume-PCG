@@ -61,7 +61,6 @@ public class GE_LevelGenerator : MonoBehaviour
     float bottomEdgeY;
     float topEdgeY;
 
-
     // Use this for initialization
     void Start()
     {
@@ -73,14 +72,14 @@ public class GE_LevelGenerator : MonoBehaviour
         boardHolder = new GameObject("BoardHolder");
         width = 30;
         height = 25;
-        populationSize = 100;
+        populationSize = 200;
         populationPos = 0;
         widthOffset = platforms[1].GetComponent<RoomEndPoint>().GetObjectWidth();
         heightOffset = platforms[2].GetComponent<RoomEndPoint>().GetObjectHeight();
         InstantiateOuterWalls();
 
         oRHS = new string[3];
-        lhs = "SOEF";
+        lhs = "SOFE";
         oRHS[0] = "1";
         oRHS[1] = "2";
         oRHS[2] = "p";
@@ -115,7 +114,7 @@ public class GE_LevelGenerator : MonoBehaviour
         }
         instantiatedObjects.Clear();
         fitness = 0;
-        lhs = "SOEF";
+        lhs = "SOFE";
         ReadLHS();
         BuildLevel();
         fitness = CalculateFitness();
@@ -161,6 +160,7 @@ public class GE_LevelGenerator : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.N)) //
         {
+            bestTenLevels.Clear();
             evolutionManager.ClearLevels();
             for (int i = 0; i < populationSize; i++)
             {
@@ -175,11 +175,19 @@ public class GE_LevelGenerator : MonoBehaviour
             populationPos = 0;
             Level bestLevel = evolutionManager.CreateBestLevel();
             BuildBestLevel(bestLevel);
+
+            bestTenLevels.Add(bestLevel);
+            for (int i = 1; i < 10; ++i)
+            {
+                bestTenLevels.Add(evolutionManager.GetLevel(i));
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.B)) //
         {
             populationPos++;
+            if (populationPos >= 10)
+                populationPos = 0;
             BuildBestLevel(bestTenLevels[populationPos]); //funkar inte.... transformlistorna i Level deletas efter start är färdigt
         }
     }
@@ -367,27 +375,27 @@ public class GE_LevelGenerator : MonoBehaviour
         {
             if (bestLevel.LHS[i] == 'S')
             {
-                GameObject o = Instantiate(platforms[0], bestLevel.objectPositions[i].position, platforms[0].transform.rotation);
+                GameObject o = Instantiate(platforms[0], bestLevel.objectPositions[i], platforms[0].transform.rotation);
                 instantiatedObjects.Add(o);
-                startPosition = (bestLevel.objectPositions[i].position - new Vector3(getObjectOffset(lhs[0]).x, 0, 0)) + new Vector3(1, 1, 0);
+                startPosition = (bestLevel.objectPositions[i] - new Vector3(getObjectOffset(lhs[0]).x, 0, 0)) + new Vector3(1, 1, 0);
                 startPlatformEndPoint = o.GetComponent<RoomEndPoint>().GetEndPosition();
             }
             #region Platforms
             if (bestLevel.LHS[i] == '1')
             {
-                GameObject o = Instantiate(platforms[1], bestLevel.objectPositions[i].position, platforms[1].transform.rotation);
+                GameObject o = Instantiate(platforms[1], bestLevel.objectPositions[i], platforms[1].transform.rotation);
                 instantiatedObjects.Add(o);
 
             }
             if (bestLevel.LHS[i] == '2')
             {
-                GameObject o = Instantiate(platforms[2], bestLevel.objectPositions[i].position, platforms[2].transform.rotation);
+                GameObject o = Instantiate(platforms[2], bestLevel.objectPositions[i], platforms[2].transform.rotation);
                 instantiatedObjects.Add(o);
 
             }
             if (bestLevel.LHS[i] == 'b') //blade
             {
-                GameObject o = Instantiate(spike, bestLevel.objectPositions[i].position, bestLevel.objectPositions[i].rotation);
+                GameObject o = Instantiate(spike, bestLevel.objectPositions[i], bestLevel.objectRotations[i]);
                 instantiatedObjects.Add(o);
             }
             #endregion
@@ -395,19 +403,19 @@ public class GE_LevelGenerator : MonoBehaviour
             #region Fruits
             if (bestLevel.LHS[i] == 'C')
             {
-                GameObject o = Instantiate(fruits[0], bestLevel.objectPositions[i].position, fruits[0].transform.rotation);
+                GameObject o = Instantiate(fruits[0], bestLevel.objectPositions[i], fruits[0].transform.rotation);
                 instantiatedObjects.Add(o);
 
             }
             if (bestLevel.LHS[i] == 'T')
             {
-                GameObject o = Instantiate(fruits[1], bestLevel.objectPositions[i].position, fruits[1].transform.rotation);
+                GameObject o = Instantiate(fruits[1], bestLevel.objectPositions[i], fruits[1].transform.rotation);
                 instantiatedObjects.Add(o);
 
             }
             if (bestLevel.LHS[i] == 'B')
             {
-                GameObject o = Instantiate(fruits[2], bestLevel.objectPositions[i].position, fruits[2].transform.rotation);
+                GameObject o = Instantiate(fruits[2], bestLevel.objectPositions[i], fruits[2].transform.rotation);
                 instantiatedObjects.Add(o);
 
             }
@@ -415,7 +423,7 @@ public class GE_LevelGenerator : MonoBehaviour
 
             if (bestLevel.LHS[i] == 'E')
             {
-                GameObject o = Instantiate(platforms[3], bestLevel.objectPositions[i].position, platforms[3].transform.rotation);
+                GameObject o = Instantiate(platforms[3], bestLevel.objectPositions[i], platforms[3].transform.rotation);
                 instantiatedObjects.Add(o);
 
                 endPlatformPosition = o.GetComponentInChildren<Transform>().FindChild("End").position;
@@ -442,27 +450,27 @@ public class GE_LevelGenerator : MonoBehaviour
         {
             if (individual.LHS[i] == 'S')
             {
-                GameObject o = Instantiate(platforms[0], individual.objectPositions[i].position, platforms[0].transform.rotation);
+                GameObject o = Instantiate(platforms[0], individual.objectPositions[i], platforms[0].transform.rotation);
                 instantiatedObjects.Add(o);
-                startPosition = (individual.objectPositions[i].position - new Vector3(getObjectOffset(lhs[0]).x, 0, 0)) + new Vector3(1, 1, 0);
+                startPosition = (individual.objectPositions[i] - new Vector3(getObjectOffset(lhs[0]).x, 0, 0)) + new Vector3(1, 1, 0);
                 startPlatformEndPoint = o.GetComponent<RoomEndPoint>().GetEndPosition();
             }
             #region Platforms
             if (individual.LHS[i] == '1')
             {
-                GameObject o = Instantiate(platforms[1], individual.objectPositions[i].position, platforms[1].transform.rotation);
+                GameObject o = Instantiate(platforms[1], individual.objectPositions[i], platforms[1].transform.rotation);
                 instantiatedObjects.Add(o);
 
             }
             if (individual.LHS[i] == '2')
             {
-                GameObject o = Instantiate(platforms[2], individual.objectPositions[i].position, platforms[2].transform.rotation);
+                GameObject o = Instantiate(platforms[2], individual.objectPositions[i], platforms[2].transform.rotation);
                 instantiatedObjects.Add(o);
 
             }
             if (individual.LHS[i] == 'b') //blade
             {
-                GameObject o = Instantiate(spike, individual.objectPositions[i].position, individual.objectPositions[i].rotation);
+                GameObject o = Instantiate(spike, individual.objectPositions[i], individual.objectRotations[i]);
                 instantiatedObjects.Add(o);
             }
             #endregion
@@ -470,19 +478,19 @@ public class GE_LevelGenerator : MonoBehaviour
             #region Fruits
             if (individual.LHS[i] == 'C')
             {
-                GameObject o = Instantiate(fruits[0], individual.objectPositions[i].position, fruits[0].transform.rotation);
+                GameObject o = Instantiate(fruits[0], individual.objectPositions[i], fruits[0].transform.rotation);
                 instantiatedObjects.Add(o);
 
             }
             if (individual.LHS[i] == 'T')
             {
-                GameObject o = Instantiate(fruits[1], individual.objectPositions[i].position, fruits[1].transform.rotation);
+                GameObject o = Instantiate(fruits[1], individual.objectPositions[i], fruits[1].transform.rotation);
                 instantiatedObjects.Add(o);
 
             }
             if (individual.LHS[i] == 'B')
             {
-                GameObject o = Instantiate(fruits[2], individual.objectPositions[i].position, fruits[2].transform.rotation);
+                GameObject o = Instantiate(fruits[2], individual.objectPositions[i], fruits[2].transform.rotation);
                 instantiatedObjects.Add(o);
 
             }
@@ -490,7 +498,7 @@ public class GE_LevelGenerator : MonoBehaviour
 
             if (individual.LHS[i] == 'E')
             {
-                GameObject o = Instantiate(platforms[3], individual.objectPositions[i].position, platforms[3].transform.rotation);
+                GameObject o = Instantiate(platforms[3], individual.objectPositions[i], platforms[3].transform.rotation);
                 instantiatedObjects.Add(o);
 
                 endPlatformPosition = o.GetComponentInChildren<Transform>().FindChild("End").position;
@@ -728,11 +736,11 @@ public class GE_LevelGenerator : MonoBehaviour
                     continue;
                 }
 
-                Destroy(instantiatedObjects[i]); //Removes unused vegetables
-                instantiatedObjects.RemoveAt(i);
-                visitedList.RemoveAt(i);
-                lhs = lhs.Remove(i, 1);
-                i--;
+                //Destroy(instantiatedObjects[i]); //Removes unused vegetables
+                //instantiatedObjects.RemoveAt(i);
+                //visitedList.RemoveAt(i);
+                //lhs = lhs.Remove(i, 1);
+                //i--;
             }
         }
 
@@ -834,7 +842,7 @@ public class GE_LevelGenerator : MonoBehaviour
 
 
         float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd() +
-         100 * CheckPlayabilityWithFruits(instantiatedObjects[0], visited, ref endFound) + 20 * CheckPlatformsNeeded(visited) + 100 * CheckVegetablesUsed(visited) + 50 * CheckVegetablesColliding();
+         100 * CheckPlayabilityWithFruits(instantiatedObjects[0], visited, ref endFound) + 20 * CheckPlatformsNeeded(visited) + 100 * CheckVegetablesUsed(visited) + 200 * CheckVegetablesColliding();
         //+ 10 * CheckAmountofBlades();
 
         Debug.Log("Total fitness: " + fitness);
@@ -894,12 +902,6 @@ public class GE_LevelGenerator : MonoBehaviour
         }
 
         return new Vector2(0, 0);
-    }
-
-    void CheckProjection(GameObject o)
-    {
-        PolygonCollider2D temp = o.GetComponent<PolygonCollider2D>();
-        //temp.points.
     }
 
     void InstantiateOuterWalls()
