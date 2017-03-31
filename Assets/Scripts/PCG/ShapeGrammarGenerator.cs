@@ -12,13 +12,13 @@ public class ShapeGrammarGenerator : MonoBehaviour
     }
 
     [SerializeField]
-    private GameObject[] rooms;
+    private GameObject[] platforms, frames, fruits;
 
     [SerializeField]
-    private GameObject[] frames;
+    private GameObject character, spike;
 
     [SerializeField]
-    private GameObject character;
+    private int spikeChance;
 
     private TileType[][] tiles;
 
@@ -35,6 +35,12 @@ public class ShapeGrammarGenerator : MonoBehaviour
 
     private GameObject boardHolder;
 
+    private List<GameObject> instantiatedObjects = new List<GameObject>();
+
+    private List<bool> activePlatforms = new List<bool>();
+
+    private int saviour = 0;
+
     float leftEdgeX;
     float rightEdgeX;
     float bottomEdgeY;
@@ -46,8 +52,10 @@ public class ShapeGrammarGenerator : MonoBehaviour
         boardHolder = new GameObject("BoardHolder");
         width = height = 45;
         InstantiateOuterWalls();
-        start = Instantiate(rooms[0], new Vector2(0, 0), Quaternion.identity);
+        start = Instantiate(platforms[0], new Vector2(0, 0), Quaternion.identity);
         start.GetComponentInChildren<SpriteRenderer>().color = Color.green;
+        instantiatedObjects.Add(start);
+        activePlatforms.Add(true);
         roomEndPoint = start.GetComponent<RoomEndPoint>();
         startPosition = roomEndPoint.GetEndPosition();
         rRhs = new string[8];
@@ -58,8 +66,8 @@ public class ShapeGrammarGenerator : MonoBehaviour
         rRhs[2] = "2R";
         rRhs[3] = "3R";
         rRhs[4] = "4R";
-        rRhs[5] = "2X";
-        rRhs[6] = "xR";
+        rRhs[5] = "2RR";
+        rRhs[6] = "RR";
         rRhs[7] = "E";
 
         //xRhs[0] = "xR";
@@ -72,6 +80,15 @@ public class ShapeGrammarGenerator : MonoBehaviour
         Debug.Log(2 + lhs);
         BuildLevel();
 
+        List<bool> visitedList = new List<bool>();
+
+        foreach (GameObject o in instantiatedObjects)
+        {
+            visitedList.Add(false);
+        }
+        visitedList[0] = true;
+        bool endFound = false;
+        CheckPlayabilityWithFruits(instantiatedObjects[0], 0, visitedList, ref endFound);
         //character = Instantiate(character, startPosition + new Vector2(-roomEndPoint.GetObjectWidth() / 2, 1), character.transform.rotation);
         //Camera camera = GameObject.Find("Main Camera").GetComponent<Camera>();
         //camera.enabled = false;
@@ -158,11 +175,11 @@ public class ShapeGrammarGenerator : MonoBehaviour
             nextStartposition += nextInstatiatePosition(rhsSelection) * 2; // * 2 to go from center of object to start/endposition
             if (rhsSelection == 6)
             {
-                nextStartposition.y -= rooms[1].GetComponent<RoomEndPoint>().GetObjectHeight();
+                nextStartposition.y -= platforms[1].GetComponent<RoomEndPoint>().GetObjectHeight();
             }
             if (previous == 'x')
             {
-                nextStartposition.y += rooms[1].GetComponent<RoomEndPoint>().GetObjectHeight();
+                nextStartposition.y += platforms[1].GetComponent<RoomEndPoint>().GetObjectHeight();
             }
 
             //Debug.Log("OldStart: " + lhsPositions[i] + "    NextStart: " + nextStartposition);
@@ -204,14 +221,22 @@ public class ShapeGrammarGenerator : MonoBehaviour
         return true;
     }
 
-    void RandomizeGaps(GameObject o)
+    void RandomizeGaps(GameObject o, int i)
     {
-        int chance = Random.Range(0, 11);
+        int chance = Random.Range(0, 5);
         if (chance <= 1)
         {
-            o.GetComponentInChildren<SpriteRenderer>().enabled = false;
-            o.GetComponentInChildren<BoxCollider2D>().enabled = false;
+            o.SetActive(false);
+            activePlatforms.Add(false);
         }
+        else
+        {
+            if (Random.Range(0, 11) < 5)
+                AddSpikes(o, 0, new List<int>(), i);
+            activePlatforms.Add(true);
+        }
+
+
     }
 
     void BuildLevel()
@@ -223,54 +248,142 @@ public class ShapeGrammarGenerator : MonoBehaviour
             {
                 instatiatePosition += nextInstatiatePosition((int)char.GetNumericValue(lhs[i]));
 
-                GameObject o = Instantiate(rooms[0], instatiatePosition, rooms[0].transform.rotation);
+                GameObject o = Instantiate(platforms[0], instatiatePosition, platforms[0].transform.rotation);
                 instatiatePosition = o.GetComponent<RoomEndPoint>().GetStartPosition();
-
-                RandomizeGaps(o);
+                instantiatedObjects.Add(o);
+                RandomizeGaps(o, i);
             }
             if (lhs[i] == '2')
             {
                 instatiatePosition += nextInstatiatePosition((int)char.GetNumericValue(lhs[i]));
 
-                GameObject o = Instantiate(rooms[0], instatiatePosition, rooms[0].transform.rotation);
+                GameObject o = Instantiate(platforms[0], instatiatePosition, platforms[0].transform.rotation);
                 instatiatePosition = o.GetComponent<RoomEndPoint>().GetEndPosition();
-
-                RandomizeGaps(o);
+                instantiatedObjects.Add(o);
+                RandomizeGaps(o, i);
             }
             if (lhs[i] == '3')
             {
                 instatiatePosition += nextInstatiatePosition((int)char.GetNumericValue(lhs[i]));
 
-                GameObject o = Instantiate(rooms[1], instatiatePosition, rooms[1].transform.rotation);
+                GameObject o = Instantiate(platforms[1], instatiatePosition, platforms[1].transform.rotation);
                 instatiatePosition = o.GetComponent<RoomEndPoint>().GetStartPosition();
-
-                RandomizeGaps(o);
+                instantiatedObjects.Add(o);
+                RandomizeGaps(o, i);
             }
             if (lhs[i] == '4')
             {
                 instatiatePosition += nextInstatiatePosition((int)char.GetNumericValue(lhs[i]));
 
-                GameObject o = Instantiate(rooms[1], instatiatePosition, rooms[1].transform.rotation);
+                GameObject o = Instantiate(platforms[1], instatiatePosition, platforms[1].transform.rotation);
                 instatiatePosition = o.GetComponent<RoomEndPoint>().GetEndPosition();
-
-                RandomizeGaps(o);
+                instantiatedObjects.Add(o);
+                RandomizeGaps(o, i);
             }
             if (lhs[i] == 'E')
             {
                 //instatiatePosition += nextInstatiatePosition((int)char.GetNumericValue(lhs[i]));
                 instatiatePosition += nextInstatiatePosition(System.Convert.ToInt32(lhs[i]));
-
-                rooms[2] = Instantiate(rooms[2], instatiatePosition, rooms[2].transform.rotation);
-
+                GameObject o = Instantiate(platforms[2], instatiatePosition, platforms[2].transform.rotation);
+                instantiatedObjects.Add(o);
+                activePlatforms.Add(true);
             }
-            if (lhs[i] == 'x')
+            //if (lhs[i] == 'x')
+            //{
+            //    instatiatePosition += nextInstatiatePosition(System.Convert.ToInt32(lhs[i]));
+            //
+            //    GameObject o = Instantiate(rooms[3], instatiatePosition, rooms[3].transform.rotation);
+            //    instatiatePosition = o.GetComponent<RoomEndPoint>().GetEndPosition();
+            //    RandomizeGaps(o);
+            //}
+        }
+    }
+
+    void AddFruit(Vector3 pos, ref List<bool> visitedList, int i)
+    {
+        int fruitChoice = Random.Range(0, fruits.Length);
+
+        GameObject o = Instantiate(fruits[fruitChoice], pos, fruits[fruitChoice].transform.rotation);
+        instantiatedObjects.Insert(i + 1, o);
+        visitedList.Insert(i + 1, false);
+        activePlatforms.Insert(i + 1, true);
+    }
+
+    void CheckPlayabilityWithFruits(GameObject next, int index, List<bool> visitedList, ref bool endFound)
+    {
+        if (next.tag == "Start") //Checks to see if the player can move from startPosition
+            if (!next.GetComponentInChildren<RaycastPlayabilityStartPoint>().checkStartPossible())
+                return;
+
+        GameObject current = next;
+
+        for (int i = 0; i < instantiatedObjects.Count; i++) //Gå FRAMÅT i loopen, för att kolla om man kommer åt endpos direkt
+        {
+            if (endFound)
+                return;
+
+            if (instantiatedObjects[i].tag != "Blade" && !visitedList[i] && current.GetComponentInChildren<RaycastPlayability>().isRayHittingPlatform(instantiatedObjects[i]))
             {
-                instatiatePosition += nextInstatiatePosition(System.Convert.ToInt32(lhs[i]));
+                current.GetComponentInChildren<RaycastPlayability>().isCheckingPlayability = true; //Draws the rays hit
+                if (instantiatedObjects[i].GetComponentInParent<Transform>().gameObject.tag == "End")
+                {
+                    Debug.Log("Found End Platform");
+                    if (instantiatedObjects[i].GetComponent<RaycastToEnd>().RetraceRaycast(current))
+                    {
+                        Debug.Log("Found End Box");
+                        endFound = true;
+                        return;
+                    }
+                    continue;
+                }
+                visitedList[i] = true;
+                CheckPlayabilityWithFruits(instantiatedObjects[i], i, visitedList, ref endFound);
 
-                GameObject o = Instantiate(rooms[3], instatiatePosition, rooms[3].transform.rotation);
-                instatiatePosition = o.GetComponent<RoomEndPoint>().GetEndPosition();
-                RandomizeGaps(o);
+                if (endFound)
+                    return;
+
+                //instantiatedObjects[i].GetComponentInChildren<RaycastPlayability>().isCheckingPlayability = false; //stops drawing
+                visitedList[i] = false; //Reset position if previous path didn't find end
             }
+
+        }
+
+        int nextPlatform = index + 1;
+
+        while (!activePlatforms[nextPlatform])
+        {
+            nextPlatform++;
+        }
+
+
+        while (saviour < 3)
+        {
+            Vector3 fruitPos = instantiatedObjects[nextPlatform].transform.position - (instantiatedObjects[nextPlatform].transform.position - instantiatedObjects[index].transform.position) / 2;
+            AddFruit(fruitPos, ref visitedList, index);
+            saviour++;
+            CheckPlayabilityWithFruits(instantiatedObjects[0], 0, visitedList, ref endFound);
+        }
+
+        if (endFound)
+            return;
+    }
+
+    void AddSpikes(GameObject platform, int spikeCount, List<int> spikePositionsCreated, int lhsPos)
+    {
+        List<int> spikePositionsList = spikePositionsCreated;
+        if (Random.Range(0, 11) < spikeChance && spikeCount != 12)
+        {
+            int spikePosition = Random.Range(2, 14);
+            while (spikePositionsList.Contains(spikePosition))
+                spikePosition = Random.Range(2, 14);
+
+            GameObject o = Instantiate(spike, platform.GetComponent<RoomEndPoint>().getSpikePosition(spikePosition).position, platform.GetComponent<RoomEndPoint>().getSpikePosition(spikePosition).rotation);
+            lhs = lhs.Insert(lhsPos + 1, "b");
+            //instantiatedObjects.Add(o);
+            spikeCount++;
+            lhsPos++;
+            spikePositionsList.Add(spikePosition);
+            AddSpikes(platform, spikeCount, spikePositionsList, lhsPos);
         }
     }
 
@@ -278,34 +391,35 @@ public class ShapeGrammarGenerator : MonoBehaviour
     {
         if (index == 1)
         {
-            return new Vector2(-rooms[0].GetComponent<RoomEndPoint>().GetObjectWidth() / 2, 0); // minus because index 1 instatiate position is start (left side of object)
+            return new Vector2(-platforms[0].GetComponent<RoomEndPoint>().GetObjectWidth() / 2, 0); // minus because index 1 instatiate position is start (left side of object)
         }
         else if (index == 2 || index == 5)
         {
-            return new Vector2(rooms[0].GetComponent<RoomEndPoint>().GetObjectWidth() / 2, 0); // plus because index 2 instatiate position is end (right side of object)
+            return new Vector2(platforms[0].GetComponent<RoomEndPoint>().GetObjectWidth() / 2, 0); // plus because index 2 instatiate position is end (right side of object)
         }
         else if (index == 3)
         {
-            return new Vector2(0, rooms[1].GetComponent<RoomEndPoint>().GetObjectHeight() / 2); // plus because index 3 instatiate position is start (top side of object)
+            return new Vector2(0, platforms[1].GetComponent<RoomEndPoint>().GetObjectHeight() / 2); // plus because index 3 instatiate position is start (top side of object)
         }
         else if (index == 4)
         {
-            return new Vector2(0, -rooms[1].GetComponent<RoomEndPoint>().GetObjectHeight() / 2); // minus because index 4 instatiate position is end (bottom side of object)
+            return new Vector2(0, -platforms[1].GetComponent<RoomEndPoint>().GetObjectHeight() / 2); // minus because index 4 instatiate position is end (bottom side of object)
         }
-        else if (index == System.Convert.ToInt32('x') || index == 6)
-        {
-            return new Vector2(rooms[3].GetComponent<RoomEndPoint>().GetObjectWidth() / 2, 0);
-        }
+        //else if (index == System.Convert.ToInt32('x') || index == 6)
+        //{
+        //    return new Vector2(rooms[3].GetComponent<RoomEndPoint>().GetObjectWidth() / 2, 0);
+        //}
 
 
-        return new Vector2(rooms[2].GetComponent<RoomEndPoint>().GetObjectWidth() / 2, 0); // if E
+        return new Vector2(platforms[2].GetComponent<RoomEndPoint>().GetObjectWidth() / 2, 0); // if E
     }
 
+    #region OuterWallInstantiations
     void InstantiateOuterWalls()
     {
         // The outer walls are one unit left, right, up and down from the board.
-        leftEdgeX = transform.position.x - (rooms[0].GetComponentInChildren<SpriteRenderer>().bounds.size.x / 2) - (frames[0].GetComponent<SpriteRenderer>().bounds.size.x / 2);
-        rightEdgeX = (width + rooms[0].GetComponentInChildren<SpriteRenderer>().bounds.size.x) - (frames[0].GetComponent<SpriteRenderer>().bounds.size.x);
+        leftEdgeX = transform.position.x - (platforms[0].GetComponentInChildren<SpriteRenderer>().bounds.size.x / 2) - (frames[0].GetComponent<SpriteRenderer>().bounds.size.x / 2);
+        rightEdgeX = (width + platforms[0].GetComponentInChildren<SpriteRenderer>().bounds.size.x) - (frames[0].GetComponent<SpriteRenderer>().bounds.size.x);
         bottomEdgeY = transform.position.y - height / 2;
         topEdgeY = height / 2;
 
@@ -362,6 +476,6 @@ public class ShapeGrammarGenerator : MonoBehaviour
         // Set the tile's parent to the board holder.
         tileInstance.transform.parent = boardHolder.transform;
     }
-
+    #endregion
 
 }

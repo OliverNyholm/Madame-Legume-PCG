@@ -10,8 +10,8 @@ public class FallDownDeath : MonoBehaviour
 
     void Start()
     {
-        player = GameObject.Find("Player").GetComponent<PlayerController>();
-        startPosition = player.transform.position;
+        //player = GameObject.Find("Player").GetComponent<PlayerController>();
+        //startPosition = player.transform.position;
 
         if (GameObject.Find("CoolGELevel"))
         {
