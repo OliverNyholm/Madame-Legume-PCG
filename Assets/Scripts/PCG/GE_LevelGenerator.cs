@@ -51,7 +51,7 @@ public class GE_LevelGenerator : MonoBehaviour
     private Vector2 startPlatformEndPoint, endPlatformPosition;
 
     private List<GameObject> instantiatedObjects = new List<GameObject>();
-    private List<Level> bestTenLevels = new List<Level>();
+    private List<Level> bestLevels = new List<Level>();
     private int populationSize, populationPos;
 
     private GameObject boardHolder;
@@ -99,10 +99,10 @@ public class GE_LevelGenerator : MonoBehaviour
         Level bestLevel = evolutionManager.CreateBestLevel();
         BuildBestLevel(bestLevel);
 
-        bestTenLevels.Add(bestLevel);
-        for (int i = 1; i < 10; ++i)
+        bestLevels.Add(bestLevel);
+        for (int i = 1; i < 20; ++i)
         {
-            bestTenLevels.Add(evolutionManager.GetLevel(i));
+            bestLevels.Add(evolutionManager.GetLevel(i));
         }
     }
 
@@ -160,7 +160,7 @@ public class GE_LevelGenerator : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.N)) //
         {
-            bestTenLevels.Clear();
+            bestLevels.Clear();
             evolutionManager.ClearLevels();
             for (int i = 0; i < populationSize; i++)
             {
@@ -176,19 +176,20 @@ public class GE_LevelGenerator : MonoBehaviour
             Level bestLevel = evolutionManager.CreateBestLevel();
             BuildBestLevel(bestLevel);
 
-            bestTenLevels.Add(bestLevel);
-            for (int i = 1; i < 10; ++i)
+            bestLevels.Add(bestLevel);
+            for (int i = 1; i < 20; ++i)
             {
-                bestTenLevels.Add(evolutionManager.GetLevel(i));
+                bestLevels.Add(evolutionManager.GetLevel(i));
             }
         }
 
         if (Input.GetKeyDown(KeyCode.B)) //
         {
             populationPos++;
-            if (populationPos >= 10)
+            if (populationPos >= 20)
                 populationPos = 0;
-            BuildBestLevel(bestTenLevels[populationPos]); //funkar inte.... transformlistorna i Level deletas efter start är färdigt
+            BuildBestLevel(bestLevels[populationPos]); //funkar inte.... transformlistorna i Level deletas efter start är färdigt
+            Debug.Log("PopulationPos: " + populationPos);
         }
     }
 
@@ -503,8 +504,6 @@ public class GE_LevelGenerator : MonoBehaviour
 
                 endPlatformPosition = o.GetComponentInChildren<Transform>().FindChild("End").position;
             }
-
-
         }
 
         lhs = individual.LHS;
@@ -595,12 +594,6 @@ public class GE_LevelGenerator : MonoBehaviour
 
         GameObject current = next;
 
-        for (int i = 0; i < instantiatedObjects.Count; i++)
-        {
-            if (instantiatedObjects[i].tag == "Fruit")
-                instantiatedObjects[i].SetActive(false);
-        }
-
         for (int i = instantiatedObjects.Count - 1; i > 0; i--) //Gå bakåt i loopen, för att kolla om man kommer åt endpos direkt
         {
             if (endFound)
@@ -629,12 +622,6 @@ public class GE_LevelGenerator : MonoBehaviour
                 instantiatedObjects[i].GetComponentInChildren<RaycastPlayability>().isCheckingPlayability = false; //stops drawing
                 visitedList[i] = false; //Reset position if previous path didn't find end
             }
-        }
-
-        for (int i = 0; i < instantiatedObjects.Count; i++)
-        {
-            if (instantiatedObjects[i].tag == "Fruit")
-                instantiatedObjects[i].SetActive(true);
         }
 
         if (endFound)
@@ -736,11 +723,11 @@ public class GE_LevelGenerator : MonoBehaviour
                     continue;
                 }
 
-                //Destroy(instantiatedObjects[i]); //Removes unused vegetables
-                //instantiatedObjects.RemoveAt(i);
-                //visitedList.RemoveAt(i);
-                //lhs = lhs.Remove(i, 1);
-                //i--;
+                Destroy(instantiatedObjects[i]); //Removes unused vegetables
+                instantiatedObjects.RemoveAt(i);
+                visitedList.RemoveAt(i);
+                lhs = lhs.Remove(i, 1);
+                i--;
             }
         }
 
@@ -823,6 +810,8 @@ public class GE_LevelGenerator : MonoBehaviour
         for (int i = 0; i < instantiatedObjects.Count; i++)
         {
             visited.Add(false);
+            if (instantiatedObjects[i].tag == "Fruit") //removes fruits temporarily for check to see if level is playable without fruits
+                instantiatedObjects[i].SetActive(false);
         }
         visited[0] = true;
 
@@ -836,9 +825,10 @@ public class GE_LevelGenerator : MonoBehaviour
         for (int i = 1; i < visited.Count; i++) //reset list
         {
             visited[i] = false;
+            if (instantiatedObjects[i].tag == "Fruit") //Re-add fruits
+                instantiatedObjects[i].SetActive(true);
         }
         endFound = false;
-
 
 
         float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd() +
@@ -877,7 +867,7 @@ public class GE_LevelGenerator : MonoBehaviour
         GameObject.Find("LevelData").GetComponent<LevelData>().SetData(carrots, tomatos, bananas);
     }
 
-    Vector2 getObjectOffset(char index)
+    public Vector2 getObjectOffset(char index)
     {
         if (index == 'S' || index == '1' || index == 'E')
         {
@@ -902,6 +892,14 @@ public class GE_LevelGenerator : MonoBehaviour
         }
 
         return new Vector2(0, 0);
+    }
+
+    public Vector3 getRandomInstatiatePosition(char type)
+    {
+        if (type == '2')
+            return new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY, bottomEdgeY + heightOffset)); //+ 1 for frame offset
+
+        return new Vector2(Random.Range(leftEdgeX, rightEdgeX - widthOffset), Random.Range(topEdgeY - heightOffset, bottomEdgeY + 1));
     }
 
     void InstantiateOuterWalls()

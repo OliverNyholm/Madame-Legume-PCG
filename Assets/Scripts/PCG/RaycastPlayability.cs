@@ -110,9 +110,9 @@ public class RaycastPlayability : MonoBehaviour
             if (DrawRaysBottomRight(other))
                 return true;
 
-        if (rightSideMid.collider == null && rightSideTop.collider == null)
-            if (DrawRaysTopRight(other))
-                return true;
+        //if (rightSideMid.collider == null && rightSideTop.collider == null)
+        //    if (DrawRaysTopRight(other))
+        //        return true;
 
         return false;
     }
@@ -150,9 +150,9 @@ public class RaycastPlayability : MonoBehaviour
             if (DrawRaysBottomLeft(other))
                 return true;
 
-        if (leftSideMid.collider == null && leftSideTop.collider == null)
-            if (DrawRaysTopLeft(other))
-                return true;
+        //if (leftSideMid.collider == null && leftSideTop.collider == null)
+        //    if (DrawRaysTopLeft(other))
+        //        return true;
 
         return false;
     }
@@ -180,16 +180,19 @@ public class RaycastPlayability : MonoBehaviour
     {
         float minimunWidth = 1.2f;
         RaycastHit2D rightSideBottom = Physics2D.Raycast(endPoint, Vector2.right, minimunWidth);
+        RaycastHit2D rightSideBottom2 = Physics2D.Raycast(endPoint + new Vector3(0, 0.4f), Vector2.right, minimunWidth);
         RaycastHit2D rightSideMid = Physics2D.Raycast(new Vector2(startTopRight.x - minimunWidth, startTopRight.y + playerHeightMin / 3), Vector2.right, minimunWidth);
         RaycastHit2D rightSideTop = Physics2D.Raycast(new Vector2(minPlayerHeightRight.x - minimunWidth, minPlayerHeightRight.y), Vector2.right, minimunWidth + 0.8f);
 
         Debug.DrawRay(endPoint, GetDrawDistance(Vector2.right * minimunWidth, rightSideBottom.distance), Color.black);
+        Debug.DrawRay(endPoint + new Vector3(0, 0.4f), GetDrawDistance(Vector2.right * minimunWidth, rightSideBottom.distance), Color.black);
         Debug.DrawRay(new Vector2(startTopRight.x - minimunWidth, startTopRight.y + playerHeightMin / 3), GetDrawDistance(Vector2.right * (minimunWidth * 2), rightSideMid.distance), Color.black);
         Debug.DrawRay(new Vector2(minPlayerHeightRight.x - minimunWidth, minPlayerHeightRight.y), GetDrawDistance(Vector2.right * (minimunWidth + 0.8f), rightSideTop.distance), Color.black);
+
         if (other == null)
             return false;
 
-        if (rightSideBottom.collider != null && rightSideBottom.collider == other || rightSideMid.collider != null && rightSideMid.collider == other || rightSideTop.collider != null && rightSideTop.collider == other)
+        if (rightSideBottom.collider != null && rightSideBottom.collider == other || rightSideBottom2.collider != null && rightSideBottom2.collider == other)// || rightSideMid.collider != null && rightSideMid.collider == other || rightSideTop.collider != null && rightSideTop.collider == other)
             return true;
 
         return false;
@@ -199,17 +202,19 @@ public class RaycastPlayability : MonoBehaviour
     {
         float minimunWidth = 1.2f;
         RaycastHit2D leftSideBottom = Physics2D.Raycast(startPoint, Vector2.left, minimunWidth);
+        RaycastHit2D leftSideBottom2 = Physics2D.Raycast(startPoint + new Vector3(0, 0.4f), Vector2.left, minimunWidth);
         RaycastHit2D leftSideMid = Physics2D.Raycast(new Vector2(startTopLeft.x + minimunWidth, startTopLeft.y + playerHeightMin / 3), Vector2.left, minimunWidth * 2);
         RaycastHit2D leftSideTop = Physics2D.Raycast(new Vector2(minPlayerHeightLeft.x + minimunWidth, minPlayerHeightLeft.y), Vector2.left, minimunWidth + 0.8f);
 
         Debug.DrawRay(startPoint, GetDrawDistance(Vector2.left * minimunWidth, leftSideBottom.distance), Color.black);
+        Debug.DrawRay(startPoint + new Vector3(0, 0.4f), GetDrawDistance(Vector2.left * minimunWidth, leftSideBottom.distance), Color.black);
         Debug.DrawRay(new Vector2(startTopLeft.x + minimunWidth, startTopLeft.y + playerHeightMin / 3), GetDrawDistance(Vector2.left * (minimunWidth * 2), leftSideMid.distance), Color.black);
         Debug.DrawRay(new Vector2(minPlayerHeightLeft.x + minimunWidth, minPlayerHeightLeft.y), GetDrawDistance(Vector2.left * (minimunWidth + 0.8f), leftSideTop.distance), Color.black);
 
         if (other == null)
             return false;
 
-        if (leftSideBottom.collider != null && leftSideBottom.collider == other || leftSideMid.collider != null && leftSideMid.collider == other || leftSideTop.collider != null && leftSideTop.collider == other)
+        if (leftSideBottom.collider != null && leftSideBottom.collider == other || leftSideBottom2.collider != null && leftSideBottom2.collider == other)// || leftSideMid.collider != null && leftSideMid.collider == other || leftSideTop.collider != null && leftSideTop.collider == other)
             return true;
 
         return false;

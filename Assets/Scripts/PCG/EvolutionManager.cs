@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 public class Level : MonoBehaviour
 {
     public string LHS;
@@ -56,14 +57,13 @@ public class EvolutionManager : MonoBehaviour
 
     public Level CreateBestLevel()
     {
-        for (int j = 0; j < 15; ++j)
+        for (int j = 0; j < 10; ++j)
         {
 
             generatedLevels = TournamentSelection();
             CreateNewPopulation();
             for (int i = 100; i < generatedLevels.Count; ++i)
                 generatedLevels[i].fitness = gameObject.GetComponent<GE_LevelGenerator>().GetCandiateFitness(generatedLevels[i]);
-
         }
 
         generatedLevels.Sort(SortByFitness);
@@ -238,6 +238,14 @@ public class EvolutionManager : MonoBehaviour
             bestPopulation.Add(CompareStrongestLevel(temp1, temp2));
         }
 
+        for(int i = 0; i < generatedLevels.Count; ++i)
+        {
+            generatedLevels[i].objectPositions.Clear();
+            generatedLevels[i].objectRotations.Clear();
+            Destroy(generatedLevels[i]);
+        }
+        generatedLevels.Clear();
+
         return bestPopulation;
     }
 
@@ -254,15 +262,50 @@ public class EvolutionManager : MonoBehaviour
         int mutationChance = 1;
         int randomInt = Random.Range(0, 11);
 
-        if(mutationChance >= randomInt)
+        if (mutationChance >= randomInt) //Move random object
         {
             int randomObject = Random.Range(0, child.objectPositions.Count);
+            while (child.LHS[randomObject] == 'b')
+                randomObject = Random.Range(0, child.objectPositions.Count);
 
-            int randomX = Random.Range(0, 6) - 3;
-            int randomY = Random.Range(0, 6) - 3;
+            int range = 1;
+            if (randomObject + 1 != child.LHS.Length) //Safety check incase randomObject is end platform
+            {
+                while (child.LHS[randomObject + range] == 'b') //Gets value of how many blades need to be moved as well if needed
+                    range++;
+            }
 
-            child.objectPositions[randomObject] += new Vector3(randomX, randomY, 0);
+            Vector3 randomPos = new Vector3(Random.Range(0, 6) - 3, Random.Range(0, 6) - 3);
+            for (int i = 0; i < range; ++i)
+                child.objectPositions[randomObject] += randomPos;
         }
+
+        randomInt = Random.Range(0, 11);
+        if (mutationChance >= randomInt) //Add Platform
+        {
+            int randomPlatform = Random.Range(1, 3);
+            child.LHS = child.LHS.Insert(1, randomPlatform.ToString()); // Position 1 in front of start
+            child.objectPositions.Insert(1, gameObject.GetComponent<GE_LevelGenerator>().getRandomInstatiatePosition(randomPlatform == 1 ? '1' : '2'));
+            child.objectRotations.Insert(1, new Quaternion(0, 0, 0, 0));
+        }
+
+        //randomInt = Random.Range(0, 11);
+        //if (mutationChance >= randomInt) //Add Vegetable
+        //{
+        //    int randomFruit = Random.Range(0, 3);
+
+        //    string fruit = "C";
+        //    if (randomFruit == 0)
+        //        fruit = "C";
+        //    if (randomFruit == 1)
+        //        fruit = "T";
+        //    if (randomFruit == 1)
+        //        fruit = "B";
+
+        //    child.LHS = child.LHS.Insert(child.LHS.Length - 2, fruit); // -2, add fruit in front of End
+        //    child.objectPositions.Insert(child.objectPositions.Count - 2, gameObject.GetComponent<GE_LevelGenerator>().getRandomInstatiatePosition('1'));
+        //    child.objectRotations.Insert(child.objectRotations.Count - 2, new Quaternion(0, 0, 0, 0));
+        //}
 
         return child;
     }
