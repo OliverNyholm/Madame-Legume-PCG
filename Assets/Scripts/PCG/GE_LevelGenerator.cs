@@ -52,7 +52,8 @@ public class GE_LevelGenerator : MonoBehaviour
 
     private List<GameObject> instantiatedObjects = new List<GameObject>();
     private List<Level> bestLevels = new List<Level>();
-    private int populationSize, populationPos;
+    private int populationSize, populationPos, evolveCount, evolveSize;
+    private bool isEvolvingLevels;
 
     private GameObject boardHolder;
 
@@ -74,6 +75,8 @@ public class GE_LevelGenerator : MonoBehaviour
         height = 25;
         populationSize = 200;
         populationPos = 0;
+        evolveCount = 0;
+        evolveSize = 100;
         widthOffset = platforms[1].GetComponent<RoomEndPoint>().GetObjectWidth();
         heightOffset = platforms[2].GetComponent<RoomEndPoint>().GetObjectHeight();
         InstantiateOuterWalls();
@@ -190,6 +193,30 @@ public class GE_LevelGenerator : MonoBehaviour
                 populationPos = 0;
             BuildBestLevel(bestLevels[populationPos]); //funkar inte.... transformlistorna i Level deletas efter start är färdigt
             Debug.Log("PopulationPos: " + populationPos);
+        }
+
+        if (Input.GetKeyDown(KeyCode.T)) //
+        {
+            isEvolvingLevels = true;
+            evolveCount = 0;
+        }
+
+        if(isEvolvingLevels && evolveCount < evolveSize)
+        {
+            evolveCount++;
+            EvolveLevels();
+            Debug.Log("Evolve Count: " + evolveCount + "/" + evolveSize);
+
+            if (evolveCount >= evolveSize)
+            {
+                isEvolvingLevels = false;
+
+                bestLevels.Clear();
+                for (int i = 0; i < 20; ++i)
+                {
+                    bestLevels.Add(evolutionManager.GetLevel(i));
+                }
+            }
         }
     }
 
@@ -510,6 +537,18 @@ public class GE_LevelGenerator : MonoBehaviour
         return CalculateFitness();
     }
 
+    void EvolveLevels()
+    {
+        foreach (GameObject o in instantiatedObjects)
+        {
+            Destroy(o);
+        }
+        instantiatedObjects.Clear();
+
+        Level bestLevel = evolutionManager.CreateBestLevel();
+        BuildBestLevel(bestLevel);
+    }
+
     void AddSpikes(GameObject platform, int spikeCount, List<int> spikePositionsCreated, int lhsPos)
     {
         List<int> spikePositionsList = spikePositionsCreated;
@@ -539,7 +578,7 @@ public class GE_LevelGenerator : MonoBehaviour
         float rayLength = Vector2.Distance(startPlatformEndPoint, endPlatformPosition);
         Vector2 direction = endPlatformPosition - startPlatformEndPoint;
         RaycastHit2D ray = Physics2D.Raycast(startPlatformEndPoint, direction, rayLength);
-        Debug.DrawRay(startPlatformEndPoint, direction, Color.cyan, 1);
+        //Debug.DrawRay(startPlatformEndPoint, direction, Color.cyan, 1);
 
         if (ray.collider.name == "End")
         {
@@ -731,7 +770,7 @@ public class GE_LevelGenerator : MonoBehaviour
             }
         }
 
-        float returnValue = 1 * vegetablesUsed + notCarrotCount * 0.2f;
+        float returnValue = 1 * (vegetablesUsed > 0 ? 1 : 0) + notCarrotCount * 0.2f;
         Debug.Log("CheckVegetablesUsed fitness: " + (100 * returnValue) + "      Vegetables used: " + vegetablesUsed);
 
         return returnValue;

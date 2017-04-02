@@ -15,20 +15,20 @@ public class RaycastPlayabilityStartPoint : MonoBehaviour
 
     public bool checkStartPossible()
     {
-
+        RaycastHit2D leftUp = Physics2D.Raycast(startPoint + new Vector3(0.5f, 0), Vector2.up, 2);
         RaycastHit2D leftBottom = Physics2D.Raycast(startPoint + new Vector3(0, 0.37f * 1), Vector2.right, 1);
         RaycastHit2D leftMid1 = Physics2D.Raycast(startPoint + new Vector3(0, 0.37f * 2), Vector2.right, 1);
         RaycastHit2D leftMid2 = Physics2D.Raycast(startPoint + new Vector3(0, 0.37f * 3), Vector2.right, 1);
         RaycastHit2D leftMid3 = Physics2D.Raycast(startPoint + new Vector3(0, 0.37f * 4), Vector2.right, 2);
         RaycastHit2D leftTopJumpMax = Physics2D.Raycast(startPoint + new Vector3(0, 0.42f * 5), Vector2.right, 2);
 
-        Debug.DrawRay(startPoint + new Vector3(0, 0.37f * 1), Vector3.right * 1, Color.gray, 2);
-        Debug.DrawRay(startPoint + new Vector3(0, 0.37f * 2), Vector3.right * 1, Color.gray, 2);
-        Debug.DrawRay(startPoint + new Vector3(0, 0.37f * 3), Vector3.right * 1, Color.gray, 2);
-        Debug.DrawRay(startPoint + new Vector3(0, 0.37f * 4), Vector3.right * 2, Color.gray, 2);
-        Debug.DrawRay(startPoint + new Vector3(0, 0.42f * 5), Vector3.right * 2, Color.gray, 2);
+        //Debug.DrawRay(startPoint + new Vector3(0, 0.37f * 1), Vector3.right * 1, Color.gray, 2);
+        //Debug.DrawRay(startPoint + new Vector3(0, 0.37f * 2), Vector3.right * 1, Color.gray, 2);
+        //Debug.DrawRay(startPoint + new Vector3(0, 0.37f * 3), Vector3.right * 1, Color.gray, 2);
+        //Debug.DrawRay(startPoint + new Vector3(0, 0.37f * 4), Vector3.right * 2, Color.gray, 2);
+        //Debug.DrawRay(startPoint + new Vector3(0, 0.42f * 5), Vector3.right * 2, Color.gray, 2);
 
-        if (leftBottom.collider == null && leftMid1.collider == null && leftMid2.collider == null && leftMid3.collider == null)
+        if (leftUp.collider == null && leftBottom.collider == null && leftMid1.collider == null && leftMid2.collider == null && leftMid3.collider == null)
             return true;
 
         if (leftTopJumpMax.collider == null) //If others blocked, but can jump over it

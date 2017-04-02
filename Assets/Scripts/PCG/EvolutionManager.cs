@@ -8,6 +8,11 @@ public class Level : MonoBehaviour
     public List<Vector3> objectPositions;
     public List<Quaternion> objectRotations;
     public float fitness;
+
+    public Level()
+    {
+        fitness = 0;
+    }
 }
 
 public class EvolutionManager : MonoBehaviour
@@ -16,11 +21,14 @@ public class EvolutionManager : MonoBehaviour
 
 
     List<Level> generatedLevels = new List<Level>();
+    char[] vegetables = new char[3];
 
     // Use this for initialization
     void Start()
     {
-
+        vegetables[0] = 'C';
+        vegetables[1] = 'T';
+        vegetables[2] = 'B';
     }
 
     void Awake()
@@ -57,14 +65,12 @@ public class EvolutionManager : MonoBehaviour
 
     public Level CreateBestLevel()
     {
-        for (int j = 0; j < 10; ++j)
-        {
 
-            generatedLevels = TournamentSelection();
-            CreateNewPopulation();
-            for (int i = 100; i < generatedLevels.Count; ++i)
-                generatedLevels[i].fitness = gameObject.GetComponent<GE_LevelGenerator>().GetCandiateFitness(generatedLevels[i]);
-        }
+        generatedLevels = TournamentSelection();
+        CreateNewPopulation();
+        for (int i = 100; i < generatedLevels.Count; ++i)
+            generatedLevels[i].fitness = gameObject.GetComponent<GE_LevelGenerator>().GetCandiateFitness(generatedLevels[i]);
+
 
         generatedLevels.Sort(SortByFitness);
         generatedLevels.Reverse();
@@ -238,7 +244,7 @@ public class EvolutionManager : MonoBehaviour
             bestPopulation.Add(CompareStrongestLevel(temp1, temp2));
         }
 
-        for(int i = 0; i < generatedLevels.Count; ++i)
+        for (int i = 0; i < generatedLevels.Count; ++i)
         {
             generatedLevels[i].objectPositions.Clear();
             generatedLevels[i].objectRotations.Clear();
@@ -251,6 +257,11 @@ public class EvolutionManager : MonoBehaviour
 
     Level CompareStrongestLevel(Level first, Level second)
     {
+        if (first.fitness == 0)
+            return second;
+        if (second.fitness == 0)
+            return first;
+
         if (first.fitness > second.fitness)
             return first;
 
@@ -277,17 +288,39 @@ public class EvolutionManager : MonoBehaviour
 
             Vector3 randomPos = new Vector3(Random.Range(0, 6) - 3, Random.Range(0, 6) - 3);
             for (int i = 0; i < range; ++i)
-                child.objectPositions[randomObject] += randomPos;
+                child.objectPositions[randomObject + i] += randomPos;
         }
 
-        randomInt = Random.Range(0, 11);
-        if (mutationChance >= randomInt) //Add Platform
-        {
-            int randomPlatform = Random.Range(1, 3);
-            child.LHS = child.LHS.Insert(1, randomPlatform.ToString()); // Position 1 in front of start
-            child.objectPositions.Insert(1, gameObject.GetComponent<GE_LevelGenerator>().getRandomInstatiatePosition(randomPlatform == 1 ? '1' : '2'));
-            child.objectRotations.Insert(1, new Quaternion(0, 0, 0, 0));
-        }
+        #region Add/Remove fruits and platforms
+        //randomInt = Random.Range(0, 11);
+        //if (mutationChance >= randomInt) //Add Platform
+        //{
+        //    int randomPlatform = Random.Range(1, 3);
+        //    child.LHS = child.LHS.Insert(1, randomPlatform.ToString()); // Position 1 in front of start
+        //    child.objectPositions.Insert(1, gameObject.GetComponent<GE_LevelGenerator>().getRandomInstatiatePosition(randomPlatform == 1 ? '1' : '2'));
+        //    child.objectRotations.Insert(1, new Quaternion(0, 0, 0, 0));
+        //}
+
+        //randomInt = Random.Range(0, 11);
+        //if (mutationChance >= randomInt) //Remove Platform
+        //{
+        //    int firstFruit = child.LHS.IndexOfAny(vegetables, 0);
+
+        //    if (firstFruit == -1)
+        //        firstFruit = child.LHS.Length - 1;
+
+        //    int platformPos = Random.Range(1, firstFruit);
+        //    int range = 1;
+        //    if (platformPos + 1 != child.LHS.Length) //Safety check incase platformPos is end platform. Dunno how it could happen...
+        //    {
+        //        if (child.LHS[platformPos + range] == 'b')
+        //            range++;
+
+        //        child.LHS = child.LHS.Remove(platformPos, range);
+        //        child.objectPositions.RemoveRange(platformPos, range);
+        //        child.objectRotations.RemoveRange(platformPos, range);
+        //    }
+        //}
 
         //randomInt = Random.Range(0, 11);
         //if (mutationChance >= randomInt) //Add Vegetable
@@ -302,10 +335,26 @@ public class EvolutionManager : MonoBehaviour
         //    if (randomFruit == 1)
         //        fruit = "B";
 
-        //    child.LHS = child.LHS.Insert(child.LHS.Length - 2, fruit); // -2, add fruit in front of End
+        //    child.LHS = child.LHS.Insert(child.LHS.Length - 1, fruit); // -1, add fruit in front of End
         //    child.objectPositions.Insert(child.objectPositions.Count - 2, gameObject.GetComponent<GE_LevelGenerator>().getRandomInstatiatePosition('1'));
         //    child.objectRotations.Insert(child.objectRotations.Count - 2, new Quaternion(0, 0, 0, 0));
         //}
+
+        //randomInt = Random.Range(0, 11);
+        //if (mutationChance >= randomInt) //Remove Vegetable
+        //{
+        //    int firstFruit = child.LHS.IndexOfAny(vegetables, 1);
+
+        //    if (firstFruit == -1)
+        //        return child;
+
+        //    int fruitPos = Random.Range(firstFruit, child.LHS.Length - 1);
+
+        //    child.LHS = child.LHS.Remove(fruitPos, 1);
+        //    child.objectPositions.RemoveAt(fruitPos);
+        //    child.objectRotations.RemoveAt(fruitPos);
+        //}
+        #endregion
 
         return child;
     }
