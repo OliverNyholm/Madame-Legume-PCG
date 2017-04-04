@@ -17,9 +17,6 @@ public class Level : MonoBehaviour
 
 public class EvolutionManager : MonoBehaviour
 {
-
-
-
     List<Level> generatedLevels = new List<Level>();
     char[] vegetables = new char[3];
 
@@ -65,6 +62,13 @@ public class EvolutionManager : MonoBehaviour
 
     public Level CreateBestLevel()
     {
+        if(generatedLevels.Count > 200)
+        {
+            generatedLevels.Sort(SortByFitness);
+            generatedLevels.Reverse();
+            generatedLevels.RemoveRange(200, generatedLevels.Count - 200);
+        }
+
 
         generatedLevels = TournamentSelection();
         CreateNewPopulation();
@@ -362,5 +366,10 @@ public class EvolutionManager : MonoBehaviour
     public void ClearLevels()
     {
         generatedLevels.Clear();
+    }
+
+    public int GetSize()
+    {
+        return generatedLevels.Count;
     }
 }

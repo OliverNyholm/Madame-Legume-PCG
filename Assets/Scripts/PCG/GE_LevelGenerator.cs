@@ -51,6 +51,7 @@ public class GE_LevelGenerator : MonoBehaviour
     private Vector2 startPlatformEndPoint, endPlatformPosition;
 
     private List<GameObject> instantiatedObjects = new List<GameObject>();
+    private List<GameObject> platformsUsed = new List<GameObject>();
     private List<Level> bestLevels = new List<Level>();
     private int populationSize, populationPos, evolveCount, evolveSize;
     private bool isEvolvingLevels;
@@ -93,7 +94,8 @@ public class GE_LevelGenerator : MonoBehaviour
         fRHS[2] = "B";
         fRHS[3] = "f";
 
-        for (int i = 0; i < populationSize; i++)
+        for (int i = 0; i < 500; i++)
+        //while(evolutionManager.GetSize() < populationSize)
         {
             GenerateLevel();
             //return;
@@ -116,6 +118,7 @@ public class GE_LevelGenerator : MonoBehaviour
             Destroy(o);
         }
         instantiatedObjects.Clear();
+        platformsUsed.Clear();
         fitness = 0;
         lhs = "SOFE";
         ReadLHS();
@@ -174,6 +177,7 @@ public class GE_LevelGenerator : MonoBehaviour
                 Destroy(o);
             }
             instantiatedObjects.Clear();
+            platformsUsed.Clear();
 
             populationPos = 0;
             Level bestLevel = evolutionManager.CreateBestLevel();
@@ -201,7 +205,12 @@ public class GE_LevelGenerator : MonoBehaviour
             evolveCount = 0;
         }
 
-        if(isEvolvingLevels && evolveCount < evolveSize)
+        if (Input.GetKeyDown(KeyCode.Y)) //
+        {
+            evolveCount = evolveSize;
+        }
+
+        if (isEvolvingLevels)
         {
             evolveCount++;
             EvolveLevels();
@@ -396,6 +405,7 @@ public class GE_LevelGenerator : MonoBehaviour
             Destroy(o);
         }
         instantiatedObjects.Clear();
+        platformsUsed.Clear();
 
         Debug.Log(bestLevel.LHS);
 
@@ -471,6 +481,7 @@ public class GE_LevelGenerator : MonoBehaviour
             Destroy(o);
         }
         instantiatedObjects.Clear();
+        platformsUsed.Clear();
 
         Level individual = candidate;
 
@@ -544,6 +555,7 @@ public class GE_LevelGenerator : MonoBehaviour
             Destroy(o);
         }
         instantiatedObjects.Clear();
+        platformsUsed.Clear();
 
         Level bestLevel = evolutionManager.CreateBestLevel();
         BuildBestLevel(bestLevel);
@@ -575,16 +587,22 @@ public class GE_LevelGenerator : MonoBehaviour
     /// <returns>1 if can't cast to end, 0.7 if possible</returns>
     float CanRaycastToEnd()
     {
-        float rayLength = Vector2.Distance(startPlatformEndPoint, endPlatformPosition);
-        Vector2 direction = endPlatformPosition - startPlatformEndPoint;
-        RaycastHit2D ray = Physics2D.Raycast(startPlatformEndPoint, direction, rayLength);
-        //Debug.DrawRay(startPlatformEndPoint, direction, Color.cyan, 1);
-
-        if (ray.collider.name == "End")
+        float fitnessValue = 0;
+        for (int i = 0; i < platformsUsed.Count; i++)
         {
-            return 0.7f;
+            Vector2 startPos = platformsUsed[i].transform.FindChild("RaycastArea").transform.FindChild("EndPoint").position;
+            Vector2 direction = endPlatformPosition - startPos;
+            RaycastHit2D ray = Physics2D.Raycast(startPos, direction, direction.magnitude);
+            //Debug.DrawRay(startPos, direction, Color.white, 5);
+
+            if (ray.collider.name != "End")
+            {
+                fitnessValue += 1;
+            }
         }
-        return 1f;
+
+        Debug.Log("CanRaycastToEnd value: " + fitnessValue);
+        return fitnessValue;
     }
 
     /// <summary>
@@ -593,14 +611,20 @@ public class GE_LevelGenerator : MonoBehaviour
     /// <returns>1 if more than 6 in distance, 0.4 if close</returns>
     float CheckStartEndDistance()
     {
-        float distance = Vector2.Distance(startPlatformEndPoint, endPlatformPosition);
+        float distance = 0;
+        for (int i = 1; i < platformsUsed.Count; i++)
+        {
+            distance += Vector2.Distance(platformsUsed[i - 1].transform.position, platformsUsed[i].transform.position);
+        }
+        distance += Vector2.Distance(platformsUsed[platformsUsed.Count - 1].transform.position, endPlatformPosition);
 
         if (distance <= 6)
         {
             return 0.4f;
         }
 
-        return 1f;
+        Debug.Log("distance: " + distance + "   fitness value: " + distance);
+        return distance;
     }
 
     /// <summary>
@@ -609,13 +633,9 @@ public class GE_LevelGenerator : MonoBehaviour
     /// <returns>1 if can move up, 0.2 if not possible and level up high</returns>
     float CheckEndHeightPosition()
     {
-        float distance = startPlatformEndPoint.y - (endPlatformPosition.y + 2); // +2 cause player can jump that height up
-
-        if (lhs.Contains("B") && !lhs.Contains("C") && !lhs.Contains("T") && distance < 0)
-        {
-            return 0.2f;
-        }
-        return 1f;
+        float distance = endPlatformPosition.y - startPlatformEndPoint.y;
+        Debug.Log("End platform Y:  " + distance);
+        return distance;
     }
 
     /// <summary>
@@ -704,6 +724,7 @@ public class GE_LevelGenerator : MonoBehaviour
                     continue;
                 }
                 visitedList[i] = true;
+                platformsUsed.Add(instantiatedObjects[i]);
                 CheckPlayabilityWithFruits(instantiatedObjects[i], visitedList, ref endFound);
 
                 if (endFound)
@@ -711,6 +732,7 @@ public class GE_LevelGenerator : MonoBehaviour
 
                 instantiatedObjects[i].GetComponentInChildren<RaycastPlayability>().isCheckingPlayability = false; //stops drawing
                 visitedList[i] = false; //Reset position if previous path didn't find end
+                platformsUsed.RemoveAt(platformsUsed.Count - 1);
             }
         }
         if (endFound)
@@ -748,7 +770,9 @@ public class GE_LevelGenerator : MonoBehaviour
     float CheckVegetablesUsed(List<bool> visitedList)
     {
         int vegetablesUsed = 0;
-        int notCarrotCount = 0; //+ more if tomatos and bananas
+        int notCarrotCount = 0; //+ more if tomatos or bananas
+        int simultaneousFruits = 0; //+ more if all fruits used
+        bool tomatoUsed = false, bananaUsed = false, carrotUsed = false;
 
         for (int i = 0; i < instantiatedObjects.Count; i++)
         {
@@ -759,6 +783,16 @@ public class GE_LevelGenerator : MonoBehaviour
                     vegetablesUsed++;
                     if (lhs[i] == 'T' || lhs[i] == 'B')
                         notCarrotCount++;
+                    if (lhs[i] == 'T')
+                        tomatoUsed = true;
+                    if (lhs[i] == 'B')
+                        bananaUsed = true;
+                    if (lhs[i] == 'C')
+                        carrotUsed = true;
+                    if ((tomatoUsed && bananaUsed && !carrotUsed) || (tomatoUsed && carrotUsed && !bananaUsed) || (bananaUsed && carrotUsed && !tomatoUsed))
+                        simultaneousFruits = 1;
+                    if (tomatoUsed && bananaUsed && carrotUsed)
+                        simultaneousFruits = 2;
                     continue;
                 }
 
@@ -770,7 +804,7 @@ public class GE_LevelGenerator : MonoBehaviour
             }
         }
 
-        float returnValue = 1 * (vegetablesUsed > 0 ? 1 : 0) + notCarrotCount * 0.2f;
+        float returnValue = 1 * (vegetablesUsed > 0 ? 1 : 0) + notCarrotCount * 0.2f + simultaneousFruits * 0.2f;
         Debug.Log("CheckVegetablesUsed fitness: " + (100 * returnValue) + "      Vegetables used: " + vegetablesUsed);
 
         return returnValue;
@@ -814,7 +848,7 @@ public class GE_LevelGenerator : MonoBehaviour
 
         if (vegetablesCount - vegetablesNotIntersected == 0)
         {
-            Debug.Log("CheckVegetablesColliding fitness: " + (50 * 1));
+            Debug.Log("CheckVegetablesColliding fitness: " + (200 * 1));
             return 1f;
         }
         Debug.Log("CheckVegetablesColliding fitness: " + 0);
@@ -868,10 +902,11 @@ public class GE_LevelGenerator : MonoBehaviour
                 instantiatedObjects[i].SetActive(true);
         }
         endFound = false;
+        platformsUsed.Add(instantiatedObjects[0]);
 
-
-        float fitness = 25 * CheckEndHeightPosition() + 10 * CheckStartEndDistance() + 10 * CanRaycastToEnd() +
-         100 * CheckPlayabilityWithFruits(instantiatedObjects[0], visited, ref endFound) + 20 * CheckPlatformsNeeded(visited) + 100 * CheckVegetablesUsed(visited) + 200 * CheckVegetablesColliding();
+        float fitness = 100 * CheckPlayabilityWithFruits(instantiatedObjects[0], visited, ref endFound)
+          + CheckEndHeightPosition() + CheckStartEndDistance() + 5 * CanRaycastToEnd()
+          + 20 * CheckPlatformsNeeded(visited) + 100 * CheckVegetablesUsed(visited) + 50 * CheckVegetablesColliding();
         //+ 10 * CheckAmountofBlades();
 
         Debug.Log("Total fitness: " + fitness);
