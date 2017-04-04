@@ -32,6 +32,7 @@ public class ShapeGrammarGenerator : MonoBehaviour
 
     private RoomEndPoint roomEndPoint;
     private Vector2 startPosition;
+    private List<Vector3> usablePlatformsPos = new List<Vector3>();
 
     private GameObject boardHolder;
 
@@ -56,6 +57,7 @@ public class ShapeGrammarGenerator : MonoBehaviour
         start.GetComponentInChildren<SpriteRenderer>().color = Color.green;
         instantiatedObjects.Add(start);
         activePlatforms.Add(true);
+        usablePlatformsPos.Add(start.transform.FindChild("MovementArea").transform.position);
         roomEndPoint = start.GetComponent<RoomEndPoint>();
         startPosition = roomEndPoint.GetEndPosition();
         rRhs = new string[8];
@@ -79,7 +81,7 @@ public class ShapeGrammarGenerator : MonoBehaviour
 
         Debug.Log(2 + lhs);
         BuildLevel();
-
+        Debug.Log("platform count: " + usablePlatformsPos.Count);
         List<bool> visitedList = new List<bool>();
 
         foreach (GameObject o in instantiatedObjects)
@@ -102,6 +104,27 @@ public class ShapeGrammarGenerator : MonoBehaviour
         {
             ClearConsole();
             SceneManager.LoadScene("PCG_Rule_Level");
+        }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            while (lhs.IndexOf('G') != -1)
+            {
+                int pos = lhs.IndexOf('G');
+                Destroy(instantiatedObjects[pos]);
+                instantiatedObjects.RemoveAt(pos);
+                activePlatforms.RemoveAt(pos);
+                lhs = lhs.Remove(pos, 1);
+                saviour = 0;
+            }
+            List<bool> visitedList = new List<bool>();
+
+            foreach (GameObject o in instantiatedObjects)
+            {
+                visitedList.Add(false);
+            }
+            visitedList[0] = true;
+            bool endFound = false;
+            CheckPlayabilityWithFruits(instantiatedObjects[0], 0, visitedList, ref endFound);
         }
     }
 
@@ -221,26 +244,27 @@ public class ShapeGrammarGenerator : MonoBehaviour
         return true;
     }
 
-    void RandomizeGaps(GameObject o, int i)
+    bool RandomizeGaps(GameObject o, int i)
     {
         int chance = Random.Range(0, 5);
         if (chance <= 1)
         {
             o.SetActive(false);
             activePlatforms.Add(false);
+            return true;
         }
         else
         {
             if (Random.Range(0, 11) < 5)
                 AddSpikes(o, 0, new List<int>(), i);
             activePlatforms.Add(true);
+            return false;
         }
-
-
     }
 
     void BuildLevel()
     {
+        int previousPlatformIndexPos = 0;
         Vector2 instatiatePosition = startPosition;
         for (int i = 0; i < lhs.Length; i++)
         {
@@ -251,7 +275,11 @@ public class ShapeGrammarGenerator : MonoBehaviour
                 GameObject o = Instantiate(platforms[0], instatiatePosition, platforms[0].transform.rotation);
                 instatiatePosition = o.GetComponent<RoomEndPoint>().GetStartPosition();
                 instantiatedObjects.Add(o);
-                RandomizeGaps(o, i);
+                if (!RandomizeGaps(o, i))
+                {
+                    usablePlatformsPos.Add(o.transform.FindChild("MovementArea").transform.position);
+                }
+                previousPlatformIndexPos = i;
             }
             if (lhs[i] == '2')
             {
@@ -260,7 +288,11 @@ public class ShapeGrammarGenerator : MonoBehaviour
                 GameObject o = Instantiate(platforms[0], instatiatePosition, platforms[0].transform.rotation);
                 instatiatePosition = o.GetComponent<RoomEndPoint>().GetEndPosition();
                 instantiatedObjects.Add(o);
-                RandomizeGaps(o, i);
+                if (!RandomizeGaps(o, i))
+                {
+                    usablePlatformsPos.Add(o.transform.FindChild("MovementArea").transform.position);
+                }
+                previousPlatformIndexPos = i;
             }
             if (lhs[i] == '3')
             {
@@ -269,7 +301,15 @@ public class ShapeGrammarGenerator : MonoBehaviour
                 GameObject o = Instantiate(platforms[1], instatiatePosition, platforms[1].transform.rotation);
                 instatiatePosition = o.GetComponent<RoomEndPoint>().GetStartPosition();
                 instantiatedObjects.Add(o);
-                RandomizeGaps(o, i);
+                if (!RandomizeGaps(o, i))
+                {
+                    if (activePlatforms[activePlatforms.Count - 1] && lhs[previousPlatformIndexPos] == '3')
+                    {
+                        usablePlatformsPos.RemoveAt(usablePlatformsPos.Count - 1);
+                    }
+                    usablePlatformsPos.Add(o.transform.FindChild("MovementArea").transform.position);
+                }
+                previousPlatformIndexPos = i;
             }
             if (lhs[i] == '4')
             {
@@ -278,32 +318,47 @@ public class ShapeGrammarGenerator : MonoBehaviour
                 GameObject o = Instantiate(platforms[1], instatiatePosition, platforms[1].transform.rotation);
                 instatiatePosition = o.GetComponent<RoomEndPoint>().GetEndPosition();
                 instantiatedObjects.Add(o);
-                RandomizeGaps(o, i);
+                if (!RandomizeGaps(o, i))
+                {
+                    usablePlatformsPos.Add(o.transform.FindChild("MovementArea").transform.position);
+                    if (activePlatforms[activePlatforms.Count - 1] && (lhs[previousPlatformIndexPos] == '4'))
+                    {
+                        usablePlatformsPos.RemoveAt(usablePlatformsPos.Count - 1);
+                    }
+                }
+                previousPlatformIndexPos = i;
             }
             if (lhs[i] == 'E')
             {
-                //instatiatePosition += nextInstatiatePosition((int)char.GetNumericValue(lhs[i]));
                 instatiatePosition += nextInstatiatePosition(System.Convert.ToInt32(lhs[i]));
                 GameObject o = Instantiate(platforms[2], instatiatePosition, platforms[2].transform.rotation);
                 instantiatedObjects.Add(o);
                 activePlatforms.Add(true);
             }
-            //if (lhs[i] == 'x')
-            //{
-            //    instatiatePosition += nextInstatiatePosition(System.Convert.ToInt32(lhs[i]));
-            //
-            //    GameObject o = Instantiate(rooms[3], instatiatePosition, rooms[3].transform.rotation);
-            //    instatiatePosition = o.GetComponent<RoomEndPoint>().GetEndPosition();
-            //    RandomizeGaps(o);
-            //}
         }
     }
 
-    void AddFruit(Vector3 pos, ref List<bool> visitedList, int i)
+    void AddFruit(Vector3 nextPos, Vector3 currentPos, ref List<bool> visitedList, int i)
     {
         int fruitChoice = Random.Range(0, fruits.Length);
 
-        GameObject o = Instantiate(fruits[fruitChoice], pos, fruits[fruitChoice].transform.rotation);
+        if (nextPos.y > currentPos.y)
+        {
+            fruitChoice = 2;
+        }
+        else if (nextPos.y < currentPos.y)
+        {
+            fruitChoice = 0;
+        }
+        else if (nextPos.y == currentPos.y)
+        {
+            fruitChoice = 1;
+        }
+
+        Vector3 fruitPos = nextPos - (nextPos - currentPos) / 2;
+
+        GameObject o = Instantiate(fruits[fruitChoice], fruitPos, fruits[fruitChoice].transform.rotation);
+        lhs = lhs.Insert(i + 1, "G");
         instantiatedObjects.Insert(i + 1, o);
         visitedList.Insert(i + 1, false);
         activePlatforms.Insert(i + 1, true);
@@ -328,10 +383,11 @@ public class ShapeGrammarGenerator : MonoBehaviour
                 if (instantiatedObjects[i].GetComponentInParent<Transform>().gameObject.tag == "End")
                 {
                     Debug.Log("Found End Platform");
+                    endFound = true;
+                    return;
                     if (instantiatedObjects[i].GetComponent<RaycastToEnd>().RetraceRaycast(current))
                     {
                         Debug.Log("Found End Box");
-                        endFound = true;
                         return;
                     }
                     continue;
@@ -348,6 +404,9 @@ public class ShapeGrammarGenerator : MonoBehaviour
 
         }
 
+        if (endFound)
+            return;
+
         int nextPlatform = index + 1;
 
         while (!activePlatforms[nextPlatform])
@@ -355,13 +414,19 @@ public class ShapeGrammarGenerator : MonoBehaviour
             nextPlatform++;
         }
 
-
         while (saviour < 3)
         {
-            Vector3 fruitPos = instantiatedObjects[nextPlatform].transform.position - (instantiatedObjects[nextPlatform].transform.position - instantiatedObjects[index].transform.position) / 2;
-            AddFruit(fruitPos, ref visitedList, index);
+            Debug.Log("s" + lhs);
+            Debug.Log("Current Platform: " + index + "   Next platform Pos:  " + nextPlatform + "   Tag: " + instantiatedObjects[nextPlatform].tag);
+            AddFruit(instantiatedObjects[nextPlatform].transform.position, instantiatedObjects[index].transform.position, ref visitedList, index);
             saviour++;
+            for (int i = 1; i < visitedList.Count; i++)
+            {
+                visitedList[i] = false;
+            }
             CheckPlayabilityWithFruits(instantiatedObjects[0], 0, visitedList, ref endFound);
+            if (endFound)
+                break;
         }
 
         if (endFound)
