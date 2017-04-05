@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 public class ShapeGrammarGenerator : MonoBehaviour
 {
@@ -334,34 +335,77 @@ public class ShapeGrammarGenerator : MonoBehaviour
                 GameObject o = Instantiate(platforms[2], instatiatePosition, platforms[2].transform.rotation);
                 instantiatedObjects.Add(o);
                 activePlatforms.Add(true);
+                usablePlatformsPos.Add(o.transform.FindChild("MovementArea").transform.position);
             }
+        }
+        CheckForAvailablePlatforms();
+    }
+
+    void CheckForAvailablePlatforms()
+    {
+        List<bool> visitedList = new List<bool>();
+        //visitedList.Add(true);
+        for (int i = 0; i < usablePlatformsPos.Count; i++)
+            visitedList.Add(false);        
+
+        usablePlatformsPos = usablePlatformsPos.OrderBy(x => Vector2.Distance(usablePlatformsPos[0], x)).ToList();
+
+        for (int i = 1; i < usablePlatformsPos.Count; i++)
+        {
+            if (!visitedList[i])
+            {
+                VisitPlatform(usablePlatformsPos[i], usablePlatformsPos[i - 1]);
+                visitedList[i] = true;
+            }
+        }
+
+        //for (int i = 0; i < usablePlatformsPos.Count; i++)
+        //{
+        //    Debug.Log("Usable list: " + usablePlatformsPos[i]);
+        //}
+        //Debug.Log("Usable Count: " + usablePlatformsPos.Count);
+
+    }
+
+    void VisitPlatform(Vector3 platformPos, Vector3 prevPlatformPos)
+    {
+        if (platformPos.x - 1.5f > prevPlatformPos.x + 6 && platformPos.y < prevPlatformPos.y - 6)
+        {
+            AddFruit("Banana", prevPlatformPos, platformPos);
+        }
+        else if ((platformPos.x - 1.5f > prevPlatformPos.x + 4 && platformPos.y > prevPlatformPos.y + 3) || platformPos.y > prevPlatformPos.y + 3)
+        {
+            AddFruit("Tomato", prevPlatformPos, platformPos);
+        }
+        else if (platformPos.x - 1.5f > prevPlatformPos.x + 6 && (platformPos.y > prevPlatformPos.y + 3 || platformPos.y == prevPlatformPos.y))
+        {
+            AddFruit("Carrot", prevPlatformPos, platformPos);
         }
     }
 
-    void AddFruit(Vector3 nextPos, Vector3 currentPos, ref List<bool> visitedList, int i)
+    void AddFruit(string fruitChoice, Vector3 currentPos, Vector3 nextPos)
     {
-        int fruitChoice = Random.Range(0, fruits.Length);
+        int fruitIndex = 0;
 
-        if (nextPos.y > currentPos.y)
+        if (fruitChoice == "Banana")
         {
-            fruitChoice = 2;
+            fruitIndex = 0;
         }
-        else if (nextPos.y < currentPos.y)
+        else if (fruitChoice == "Carrot")
         {
-            fruitChoice = 0;
+            fruitIndex = 1;
         }
-        else if (nextPos.y == currentPos.y)
+        else if (fruitChoice == "Tomato")
         {
-            fruitChoice = 1;
+            fruitIndex = 2;
         }
+
+        currentPos.x -= 1.5f;
+        nextPos.x -= 1.5f;
 
         Vector3 fruitPos = nextPos - (nextPos - currentPos) / 2;
 
-        GameObject o = Instantiate(fruits[fruitChoice], fruitPos, fruits[fruitChoice].transform.rotation);
-        lhs = lhs.Insert(i + 1, "G");
-        instantiatedObjects.Insert(i + 1, o);
-        visitedList.Insert(i + 1, false);
-        activePlatforms.Insert(i + 1, true);
+        GameObject o = Instantiate(fruits[fruitIndex], fruitPos, fruits[fruitIndex].transform.rotation);
     }
 
     void CheckPlayabilityWithFruits(GameObject next, int index, List<bool> visitedList, ref bool endFound)
@@ -418,7 +462,7 @@ public class ShapeGrammarGenerator : MonoBehaviour
         {
             Debug.Log("s" + lhs);
             Debug.Log("Current Platform: " + index + "   Next platform Pos:  " + nextPlatform + "   Tag: " + instantiatedObjects[nextPlatform].tag);
-            AddFruit(instantiatedObjects[nextPlatform].transform.position, instantiatedObjects[index].transform.position, ref visitedList, index);
+            //AddFruit(instantiatedObjects[nextPlatform].transform.position, instantiatedObjects[index].transform.position, ref visitedList, index);
             saviour++;
             for (int i = 1; i < visitedList.Count; i++)
             {
