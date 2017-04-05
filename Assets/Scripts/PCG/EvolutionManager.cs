@@ -19,6 +19,7 @@ public class EvolutionManager : MonoBehaviour
 {
     List<Level> generatedLevels = new List<Level>();
     char[] vegetables = new char[3];
+    private int populationSize;
 
     // Use this for initialization
     void Start()
@@ -26,11 +27,12 @@ public class EvolutionManager : MonoBehaviour
         vegetables[0] = 'C';
         vegetables[1] = 'T';
         vegetables[2] = 'B';
+        populationSize = 100;
     }
 
     void Awake()
     {
-
+        populationSize = 100;
     }
 
     // Update is called once per frame
@@ -62,17 +64,17 @@ public class EvolutionManager : MonoBehaviour
 
     public Level CreateBestLevel()
     {
-        if(generatedLevels.Count > 200)
+        if (generatedLevels.Count > populationSize)
         {
             generatedLevels.Sort(SortByFitness);
             generatedLevels.Reverse();
-            generatedLevels.RemoveRange(200, generatedLevels.Count - 200);
+            generatedLevels.RemoveRange(populationSize, generatedLevels.Count - populationSize);
         }
 
 
-        generatedLevels = TournamentSelection();
+        //generatedLevels = TournamentSelection();
         CreateNewPopulation();
-        for (int i = 100; i < generatedLevels.Count; ++i)
+        for (int i = 0; i < generatedLevels.Count; ++i) //recalculate fitness for every level
             generatedLevels[i].fitness = gameObject.GetComponent<GE_LevelGenerator>().GetCandiateFitness(generatedLevels[i]);
 
 
@@ -91,29 +93,32 @@ public class EvolutionManager : MonoBehaviour
 
     void CreateNewPopulation()
     {
-        List<Level> tempList = new List<Level>();
-        tempList.AddRange(generatedLevels.GetRange(0, generatedLevels.Count));
+        List<Level> oldPopulation = new List<Level>();
+        oldPopulation.AddRange(generatedLevels.GetRange(0, generatedLevels.Count)); //Save old generation
 
-        while (tempList.Count != 0)
+        generatedLevels.Clear(); //Clear list to make space for new population
+
+        List<Level> tournamentList = new List<Level>();
+        while (generatedLevels.Count < populationSize)
         {
-            int randomPos1 = Random.Range(0, tempList.Count);
-
-            Level temp1 = tempList[randomPos1];
-            tempList.RemoveAt(randomPos1);
-
-            int randomPos2 = Random.Range(0, tempList.Count);
-            while (randomPos2 == randomPos1)
+            for (int i = 0; i < 8; ++i)
             {
-                if (tempList.Count == 1)
-                    break;
-                randomPos2 = Random.Range(0, tempList.Count);
+                int randomPos = Random.Range(0, oldPopulation.Count);
+                tournamentList.Add(oldPopulation[randomPos]); //Adds random element from oldPopulation
             }
 
-            Level temp2 = tempList[randomPos2];
-            tempList.RemoveAt(randomPos2);
+            TournamentSelection(ref tournamentList);
 
-            //CrossOver(temp1, temp2);
-            OnePointCrossover(temp1, temp2);
+            int crossoverChance = 7; //70%
+            if (crossoverChance > Random.Range(1, 11))
+            {
+                OnePointCrossover(tournamentList[0], tournamentList[1]);
+            }
+            else
+            {
+                generatedLevels.Add(tournamentList[0]);
+                generatedLevels.Add(tournamentList[1]);
+            }
         }
     }
 
@@ -223,40 +228,19 @@ public class EvolutionManager : MonoBehaviour
         return child;
     }
 
-    List<Level> TournamentSelection()
+    void TournamentSelection(ref List<Level> tournamentPopulation)
     {
-        List<Level> bestPopulation = new List<Level>();
+        List<Level> semiFinal = new List<Level>();
 
-        while (generatedLevels.Count > 0)
-        {
-            int randomPos1 = Random.Range(0, generatedLevels.Count);
+        semiFinal.Add(CompareStrongestLevel(tournamentPopulation[0], tournamentPopulation[1])); //Adds4 best to semifinal
+        semiFinal.Add(CompareStrongestLevel(tournamentPopulation[2], tournamentPopulation[3]));
+        semiFinal.Add(CompareStrongestLevel(tournamentPopulation[4], tournamentPopulation[5]));
+        semiFinal.Add(CompareStrongestLevel(tournamentPopulation[6], tournamentPopulation[7]));
 
-            Level temp1 = generatedLevels[randomPos1];
-            generatedLevels.RemoveAt(randomPos1);
+        tournamentPopulation.Clear(); //Clear old list
 
-            int randomPos2 = Random.Range(0, generatedLevels.Count);
-            while (randomPos2 == randomPos1)
-            {
-                if (generatedLevels.Count == 1)
-                    break;
-                randomPos2 = Random.Range(0, generatedLevels.Count);
-            }
-
-            Level temp2 = generatedLevels[randomPos2];
-            generatedLevels.RemoveAt(randomPos2);
-
-            bestPopulation.Add(CompareStrongestLevel(temp1, temp2));
-        }
-
-        for (int i = 0; i < generatedLevels.Count; ++i)
-        {
-            generatedLevels[i].objectPositions.Clear();
-            generatedLevels[i].objectRotations.Clear();
-            Destroy(generatedLevels[i]);
-        }
-        generatedLevels.Clear();
-
-        return bestPopulation;
+        tournamentPopulation.Add(CompareStrongestLevel(semiFinal[0], semiFinal[1])); //Add the two best
+        tournamentPopulation.Add(CompareStrongestLevel(semiFinal[2], semiFinal[3]));
     }
 
     Level CompareStrongestLevel(Level first, Level second)

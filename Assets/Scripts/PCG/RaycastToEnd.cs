@@ -46,8 +46,8 @@ public class RaycastToEnd : MonoBehaviour
         RaycastHit2D raycastUpRight = Physics2D.Raycast(right, Vector2.up, 1.1f);
         RaycastHit2D raycastUpLeft = Physics2D.Raycast(right - offset, Vector2.up, 1.1f);
 
-        Debug.DrawRay(right, Vector2.up * 1.1f, Color.cyan, .5f);
-        Debug.DrawRay(right - offset, Vector2.up * 1.1f, Color.cyan, .5f);
+        //Debug.DrawRay(right, Vector2.up * 1.1f, Color.cyan, .5f);
+        //Debug.DrawRay(right - offset, Vector2.up * 1.1f, Color.cyan, .5f);
 
         if (raycastUpRight.collider == null && raycastUpLeft.collider == null)
             return true;
@@ -63,8 +63,8 @@ public class RaycastToEnd : MonoBehaviour
         RaycastHit2D rightToEnd = Physics2D.Raycast(right, rightToEndDirection);
         RaycastHit2D rightToStart = Physics2D.Raycast(right, rightToStartDirection);
 
-        Debug.DrawRay(right, GetDrawDistance(rightToEndDirection, rightToEnd.distance), Color.white, .5f);
-        Debug.DrawRay(right, GetDrawDistance(rightToStartDirection, rightToStart.distance), Color.white, .5f);
+        //Debug.DrawRay(right, GetDrawDistance(rightToEndDirection, rightToEnd.distance), Color.white, .5f);
+        //Debug.DrawRay(right, GetDrawDistance(rightToStartDirection, rightToStart.distance), Color.white, .5f);
 
         Collider2D hitBox = previous.GetComponent<Collider2D>();
         Collider2D movementBox = previous.transform.FindChild("MovementArea").GetComponent<Collider2D>();
@@ -93,8 +93,8 @@ public class RaycastToEnd : MonoBehaviour
         RaycastHit2D midRightToEnd = Physics2D.Raycast(midRight, midRightToEndDirection);
         RaycastHit2D midRightToStart = Physics2D.Raycast(midRight, midRightToStartDirection);
 
-        Debug.DrawRay(midRight, GetDrawDistance(midRightToEndDirection, midRightToEnd.distance), Color.white, .5f);
-        Debug.DrawRay(midRight, GetDrawDistance(midRightToStartDirection, midRightToStart.distance), Color.white, .5f);
+        //Debug.DrawRay(midRight, GetDrawDistance(midRightToEndDirection, midRightToEnd.distance), Color.white, .5f);
+        //Debug.DrawRay(midRight, GetDrawDistance(midRightToStartDirection, midRightToStart.distance), Color.white, .5f);
 
         Collider2D hitBox = previous.GetComponent<Collider2D>();
         Collider2D movementBox = previous.transform.FindChild("MovementArea").GetComponent<Collider2D>();
@@ -123,8 +123,8 @@ public class RaycastToEnd : MonoBehaviour
         RaycastHit2D middleToEnd = Physics2D.Raycast(middle, middleToEndDirection);
         RaycastHit2D middleToStart = Physics2D.Raycast(middle, middleToStartDirection);
 
-        Debug.DrawRay(middle, GetDrawDistance(middleToEndDirection, middleToEnd.distance), Color.white, .5f);
-        Debug.DrawRay(middle, GetDrawDistance(middleToStartDirection, middleToStart.distance), Color.white, .5f);
+        //Debug.DrawRay(middle, GetDrawDistance(middleToEndDirection, middleToEnd.distance), Color.white, .5f);
+        //Debug.DrawRay(middle, GetDrawDistance(middleToStartDirection, middleToStart.distance), Color.white, .5f);
 
         Collider2D hitBox = previous.GetComponent<Collider2D>();
         Collider2D movementBox = previous.transform.FindChild("MovementArea").GetComponent<Collider2D>();
@@ -153,8 +153,8 @@ public class RaycastToEnd : MonoBehaviour
         RaycastHit2D midLeftToEnd = Physics2D.Raycast(midLeft, midLeftToEndDirection);
         RaycastHit2D midLeftToStart = Physics2D.Raycast(midLeft, midLeftToStartDirection);
 
-        Debug.DrawRay(midLeft, GetDrawDistance(midLeftToEndDirection, midLeftToEnd.distance), Color.white, .5f);
-        Debug.DrawRay(midLeft, GetDrawDistance(midLeftToStartDirection, midLeftToStart.distance), Color.white, .5f);
+        //Debug.DrawRay(midLeft, GetDrawDistance(midLeftToEndDirection, midLeftToEnd.distance), Color.white, .5f);
+        //Debug.DrawRay(midLeft, GetDrawDistance(midLeftToStartDirection, midLeftToStart.distance), Color.white, .5f);
 
         Collider2D hitBox = previous.GetComponent<Collider2D>();
         Collider2D movementBox = previous.transform.FindChild("MovementArea").GetComponent<Collider2D>();
@@ -183,8 +183,8 @@ public class RaycastToEnd : MonoBehaviour
         RaycastHit2D leftToEnd = Physics2D.Raycast(left, leftToEndDirection);
         RaycastHit2D leftToStart = Physics2D.Raycast(left, leftToStartDirection);
 
-        Debug.DrawRay(left, GetDrawDistance(leftToEndDirection, leftToEnd.distance), Color.white, .5f);
-        Debug.DrawRay(left, GetDrawDistance(leftToStartDirection, leftToStart.distance), Color.white, .5f);
+        //Debug.DrawRay(left, GetDrawDistance(leftToEndDirection, leftToEnd.distance), Color.white, .5f);
+        //Debug.DrawRay(left, GetDrawDistance(leftToStartDirection, leftToStart.distance), Color.white, .5f);
 
         Collider2D hitBox = previous.GetComponent<Collider2D>();
         Collider2D movementBox = previous.transform.FindChild("MovementArea").GetComponent<Collider2D>();

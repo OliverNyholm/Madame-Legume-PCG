@@ -74,7 +74,7 @@ public class GE_LevelGenerator : MonoBehaviour
         boardHolder = new GameObject("BoardHolder");
         width = 30;
         height = 25;
-        populationSize = 200;
+        populationSize = 100;
         populationPos = 0;
         evolveCount = 0;
         evolveSize = 100;
@@ -105,7 +105,7 @@ public class GE_LevelGenerator : MonoBehaviour
         BuildBestLevel(bestLevel);
 
         bestLevels.Add(bestLevel);
-        for (int i = 1; i < 20; ++i)
+        for (int i = 1; i < 80; ++i)
         {
             bestLevels.Add(evolutionManager.GetLevel(i));
         }
@@ -168,7 +168,7 @@ public class GE_LevelGenerator : MonoBehaviour
         {
             bestLevels.Clear();
             evolutionManager.ClearLevels();
-            for (int i = 0; i < populationSize; i++)
+            for (int i = 0; i < 500; i++)
             {
                 GenerateLevel();
             }
@@ -184,7 +184,7 @@ public class GE_LevelGenerator : MonoBehaviour
             BuildBestLevel(bestLevel);
 
             bestLevels.Add(bestLevel);
-            for (int i = 1; i < 20; ++i)
+            for (int i = 1; i < 80; ++i)
             {
                 bestLevels.Add(evolutionManager.GetLevel(i));
             }
@@ -193,7 +193,7 @@ public class GE_LevelGenerator : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.B)) //
         {
             populationPos++;
-            if (populationPos >= 20)
+            if (populationPos >= 80)
                 populationPos = 0;
             BuildBestLevel(bestLevels[populationPos]); //funkar inte.... transformlistorna i Level deletas efter start är färdigt
             Debug.Log("PopulationPos: " + populationPos);
@@ -203,6 +203,7 @@ public class GE_LevelGenerator : MonoBehaviour
         {
             isEvolvingLevels = true;
             evolveCount = 0;
+            populationPos = 0;
         }
 
         if (Input.GetKeyDown(KeyCode.Y)) //
@@ -221,7 +222,7 @@ public class GE_LevelGenerator : MonoBehaviour
                 isEvolvingLevels = false;
 
                 bestLevels.Clear();
-                for (int i = 0; i < 20; ++i)
+                for (int i = 0; i < 80; ++i)
                 {
                     bestLevels.Add(evolutionManager.GetLevel(i));
                 }
@@ -796,11 +797,11 @@ public class GE_LevelGenerator : MonoBehaviour
                     continue;
                 }
 
-                Destroy(instantiatedObjects[i]); //Removes unused vegetables
-                instantiatedObjects.RemoveAt(i);
-                visitedList.RemoveAt(i);
-                lhs = lhs.Remove(i, 1);
-                i--;
+                //Destroy(instantiatedObjects[i]); //Removes unused vegetables
+                //instantiatedObjects.RemoveAt(i);
+                //visitedList.RemoveAt(i);
+                //lhs = lhs.Remove(i, 1);
+                //i--;
             }
         }
 
