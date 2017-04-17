@@ -74,7 +74,7 @@ public class RaycastToEnd : MonoBehaviour
         {
             Vector3 rightToEndBoxDirection = transform.FindChild("End").position - right;
             RaycastHit2D rightToEndBox = Physics2D.Raycast(right, rightToEndBoxDirection, rightToEndBoxDirection.magnitude);
-            Debug.DrawRay(right, GetDrawDistance(rightToEndBoxDirection, rightToEndBox.distance), Color.green, .5f);
+            //Debug.DrawRay(right, GetDrawDistance(rightToEndBoxDirection, rightToEndBox.distance), Color.green, .5f);
 
             Collider2D endBox = transform.FindChild("End").GetComponent<Collider2D>();
             if (rightToEndBox.collider != null && rightToEndBox.collider == endBox)
@@ -104,7 +104,7 @@ public class RaycastToEnd : MonoBehaviour
         {
             Vector3 midRightToEndBoxDirection = transform.FindChild("End").position - midRight;
             RaycastHit2D midRightToEndBox = Physics2D.Raycast(midRight, midRightToEndBoxDirection, midRightToEndBoxDirection.magnitude);
-            Debug.DrawRay(midRight, GetDrawDistance(midRightToEndBoxDirection, midRightToEndBox.distance), Color.green, .5f);
+            //Debug.DrawRay(midRight, GetDrawDistance(midRightToEndBoxDirection, midRightToEndBox.distance), Color.green, .5f);
 
             Collider2D endBox = transform.FindChild("End").GetComponent<Collider2D>();
             if (midRightToEndBox.collider != null && midRightToEndBox.collider == endBox)
@@ -134,7 +134,7 @@ public class RaycastToEnd : MonoBehaviour
         {
             Vector3 middleToEndBoxDirection = transform.FindChild("End").position - middle;
             RaycastHit2D middleToEndBox = Physics2D.Raycast(middle, middleToEndBoxDirection, middleToEndBoxDirection.magnitude);
-            Debug.DrawRay(middle, GetDrawDistance(middleToEndBoxDirection, middleToEndBox.distance), Color.green, .5f);
+            //Debug.DrawRay(middle, GetDrawDistance(middleToEndBoxDirection, middleToEndBox.distance), Color.green, .5f);
 
             Collider2D endBox = transform.FindChild("End").GetComponent<Collider2D>();
             if (middleToEndBox.collider != null && middleToEndBox.collider == endBox)
@@ -164,7 +164,7 @@ public class RaycastToEnd : MonoBehaviour
         {
             Vector3 midLeftToEndBoxDirection = transform.FindChild("End").position - midLeft;
             RaycastHit2D midLeftToEndBox = Physics2D.Raycast(midLeft, midLeftToEndBoxDirection, midLeftToEndBoxDirection.magnitude);
-            Debug.DrawRay(midLeft, GetDrawDistance(midLeftToEndBoxDirection, midLeftToEndBox.distance), Color.green, .5f);
+            //Debug.DrawRay(midLeft, GetDrawDistance(midLeftToEndBoxDirection, midLeftToEndBox.distance), Color.green, .5f);
 
             Collider2D endBox = transform.FindChild("End").GetComponent<Collider2D>();
             if (midLeftToEndBox.collider != null && midLeftToEndBox.collider == endBox)
@@ -194,7 +194,7 @@ public class RaycastToEnd : MonoBehaviour
         {
             Vector3 leftToEndBoxDirection = transform.FindChild("End").position - left;
             RaycastHit2D leftToEndBox = Physics2D.Raycast(left, leftToEndBoxDirection, leftToEndBoxDirection.magnitude);
-            Debug.DrawRay(left, GetDrawDistance(leftToEndBoxDirection, leftToEndBox.distance), Color.green, .5f);
+            //Debug.DrawRay(left, GetDrawDistance(leftToEndBoxDirection, leftToEndBox.distance), Color.green, .5f);
 
             Collider2D endBox = transform.FindChild("End").GetComponent<Collider2D>();
             if (leftToEndBox.collider != null && leftToEndBox.collider == endBox)

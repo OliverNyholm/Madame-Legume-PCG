@@ -17,6 +17,7 @@ public class Level : MonoBehaviour
 
 public class EvolutionManager : MonoBehaviour
 {
+    GE_LevelGenerator geGenerator;
     List<Level> generatedLevels = new List<Level>();
     char[] vegetables = new char[3];
     private int populationSize;
@@ -28,11 +29,13 @@ public class EvolutionManager : MonoBehaviour
         vegetables[1] = 'T';
         vegetables[2] = 'B';
         populationSize = 100;
+        geGenerator = gameObject.GetComponent<GE_LevelGenerator>();
     }
 
     void Awake()
     {
         populationSize = 100;
+        geGenerator = gameObject.GetComponent<GE_LevelGenerator>();
     }
 
     // Update is called once per frame
@@ -69,6 +72,8 @@ public class EvolutionManager : MonoBehaviour
             generatedLevels.Sort(SortByFitness);
             generatedLevels.Reverse();
             generatedLevels.RemoveRange(populationSize, generatedLevels.Count - populationSize);
+
+            return generatedLevels[0];
         }
 
 
@@ -93,33 +98,41 @@ public class EvolutionManager : MonoBehaviour
 
     void CreateNewPopulation()
     {
-        List<Level> oldPopulation = new List<Level>();
-        oldPopulation.AddRange(generatedLevels.GetRange(0, generatedLevels.Count)); //Save old generation
+        generatedLevels.Sort(SortByFitness);
+        generatedLevels.Reverse();
+        generatedLevels.RemoveRange(40, 60); //Save top 2/5 of population
 
-        generatedLevels.Clear(); //Clear list to make space for new population
+        #region Old Tournamentsystem
+        //List<Level> tournamentList = new List<Level>();
+        //while (generatedLevels.Count < populationSize)
+        //{
+        //    for (int i = 0; i < 8; ++i)
+        //    {
+        //        int randomPos = Random.Range(0, oldPopulation.Count);
+        //        tournamentList.Add(oldPopulation[randomPos]); //Adds random element from oldPopulation
+        //    }
 
-        List<Level> tournamentList = new List<Level>();
-        while (generatedLevels.Count < populationSize)
-        {
-            for (int i = 0; i < 8; ++i)
-            {
-                int randomPos = Random.Range(0, oldPopulation.Count);
-                tournamentList.Add(oldPopulation[randomPos]); //Adds random element from oldPopulation
-            }
+        //    TournamentSelection(ref tournamentList);
 
-            TournamentSelection(ref tournamentList);
+        //    int crossoverChance = 7; //70%
+        //    if (crossoverChance > Random.Range(1, 11))
+        //    {
+        //        OnePointCrossover(tournamentList[0], tournamentList[1]);
+        //    }
+        //    else
+        //    {
+        //        generatedLevels.Add(tournamentList[0]);
+        //        generatedLevels.Add(tournamentList[1]);
+        //    }
+        //}
+        #endregion
 
-            int crossoverChance = 7; //70%
-            if (crossoverChance > Random.Range(1, 11))
-            {
-                OnePointCrossover(tournamentList[0], tournamentList[1]);
-            }
-            else
-            {
-                generatedLevels.Add(tournamentList[0]);
-                generatedLevels.Add(tournamentList[1]);
-            }
-        }
+        for (int i = 0; i < 40; i += 2) //Adds 4 children per loop. 2 from crossover, and 2 more after crossover and mutation
+            OnePointCrossover(generatedLevels[i], generatedLevels[i + 1]);
+
+
+        for (int i = 0; i < 20; i++) //Create 20 new levels each iteration
+            geGenerator.GenerateLevel();
     }
 
     //void TwoPointCrossover(Level dad, Level mom)
@@ -174,11 +187,24 @@ public class EvolutionManager : MonoBehaviour
         child2.objectRotations.AddRange(mom.objectRotations.GetRange(0, momCrossoverPoint));
         child2.objectRotations.AddRange(dad.objectRotations.GetRange(dadCrossoverPoint, dad.objectRotations.Count - dadCrossoverPoint));
 
-        child1 = Mutation(child1);
-        child2 = Mutation(child2);
 
-        generatedLevels.Add(child1);
-        generatedLevels.Add(child2);
+        if (Random.Range(0, 2) == 0) //Mutates one and only does crossover on the other
+        {
+            generatedLevels.Add(child1);
+
+            child2 = Mutation(child2);
+            generatedLevels.Add(child2);
+        }
+        else
+        {
+            generatedLevels.Add(child2);
+
+            child1 = Mutation(child1);
+            generatedLevels.Add(child1);
+        }
+
+        //generatedLevels.Add(child1); //Add second lot with mutation
+        //generatedLevels.Add(child2);
     }
 
     void CrossOver(Level dad, Level mom) //Uniform

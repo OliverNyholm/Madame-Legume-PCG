@@ -52,7 +52,6 @@ public class GE_LevelGenerator : MonoBehaviour
 
     private List<GameObject> instantiatedObjects = new List<GameObject>();
     private List<GameObject> platformsUsed = new List<GameObject>();
-    private List<Level> bestLevels = new List<Level>();
     private int populationSize, populationPos, evolveCount, evolveSize;
     private bool isEvolvingLevels;
 
@@ -103,15 +102,9 @@ public class GE_LevelGenerator : MonoBehaviour
 
         Level bestLevel = evolutionManager.CreateBestLevel();
         BuildBestLevel(bestLevel);
-
-        bestLevels.Add(bestLevel);
-        for (int i = 1; i < 80; ++i)
-        {
-            bestLevels.Add(evolutionManager.GetLevel(i));
-        }
     }
 
-    void GenerateLevel()
+    public void GenerateLevel()
     {
         foreach (GameObject o in instantiatedObjects)
         {
@@ -166,7 +159,7 @@ public class GE_LevelGenerator : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.N)) //
         {
-            bestLevels.Clear();
+
             evolutionManager.ClearLevels();
             for (int i = 0; i < 500; i++)
             {
@@ -182,20 +175,14 @@ public class GE_LevelGenerator : MonoBehaviour
             populationPos = 0;
             Level bestLevel = evolutionManager.CreateBestLevel();
             BuildBestLevel(bestLevel);
-
-            bestLevels.Add(bestLevel);
-            for (int i = 1; i < 80; ++i)
-            {
-                bestLevels.Add(evolutionManager.GetLevel(i));
-            }
         }
 
         if (Input.GetKeyDown(KeyCode.B)) //
         {
             populationPos++;
-            if (populationPos >= 80)
+            if (populationPos >= populationSize)
                 populationPos = 0;
-            BuildBestLevel(bestLevels[populationPos]); //funkar inte.... transformlistorna i Level deletas efter start är färdigt
+            BuildBestLevel(evolutionManager.GetLevel(populationPos));
             Debug.Log("PopulationPos: " + populationPos);
         }
 
@@ -220,12 +207,6 @@ public class GE_LevelGenerator : MonoBehaviour
             if (evolveCount >= evolveSize)
             {
                 isEvolvingLevels = false;
-
-                bestLevels.Clear();
-                for (int i = 0; i < 80; ++i)
-                {
-                    bestLevels.Add(evolutionManager.GetLevel(i));
-                }
             }
         }
     }
@@ -892,8 +873,15 @@ public class GE_LevelGenerator : MonoBehaviour
 
         if (CheckPlayabilityFindEndWithoutFruits(instantiatedObjects[0], visited, ref endFound))
         {
-            Debug.Log("Total fitness: " + 60);
-            return 60; //return ok value, incase level would want to be modified manually.
+            for (int i = 1; i < visited.Count; i++) //reset list
+            {
+                visited[i] = false;
+                if (instantiatedObjects[i].tag == "Fruit") //Re-add fruits
+                    instantiatedObjects[i].SetActive(true);
+            }
+
+            Debug.Log("Total fitness: " + 30);
+            return 30; //return ok value, incase level would want to be modified manually.
         }
 
         for (int i = 1; i < visited.Count; i++) //reset list
@@ -905,9 +893,18 @@ public class GE_LevelGenerator : MonoBehaviour
         endFound = false;
         platformsUsed.Add(instantiatedObjects[0]);
 
-        float fitness = 100 * CheckPlayabilityWithFruits(instantiatedObjects[0], visited, ref endFound)
-          + CheckEndHeightPosition() + CheckStartEndDistance() + 5 * CanRaycastToEnd()
-          + 20 * CheckPlatformsNeeded(visited) + 100 * CheckVegetablesUsed(visited) + 50 * CheckVegetablesColliding();
+        float playability = 20 * CheckPlayabilityWithFruits(instantiatedObjects[0], visited, ref endFound);
+        float vegetablesUsed = 10 * CheckVegetablesUsed(visited);
+        float heightPosition = CheckEndHeightPosition() / 2;
+        float distance = CheckStartEndDistance() / 2;
+        float endInSight = 5 * CanRaycastToEnd();
+        float neededPlatforms = 10 * CheckPlatformsNeeded(visited);
+        float vegetablesColliding = 10 * CheckVegetablesColliding();
+
+        float fitness = playability + vegetablesUsed + heightPosition + distance + endInSight + vegetablesColliding;
+        Debug.Log("Total Fitness: " + fitness + "   Playability: " + playability + "   Vegetables Used: " + vegetablesUsed + "   Height position: " + heightPosition +
+            "   Distance: " + distance + "   EndInSight: " + endInSight + /*"   Needed platforms: " + neededPlatforms + */"   Vegetables Colliding: " + vegetablesColliding);
+        //float fitness = 200 * CheckPlayabilityWithFruits(instantiatedObjects[0], visited, ref endFound);
         //+ 10 * CheckAmountofBlades();
 
         Debug.Log("Total fitness: " + fitness);
