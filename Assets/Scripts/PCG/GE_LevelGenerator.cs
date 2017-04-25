@@ -209,6 +209,10 @@ public class GE_LevelGenerator : MonoBehaviour
                 isEvolvingLevels = false;
             }
         }
+
+        if (Input.GetKeyDown(KeyCode.X))
+            evolutionManager.SaveLevelToTxt(populationPos);
+
     }
 
     static void ClearConsole()
@@ -583,7 +587,7 @@ public class GE_LevelGenerator : MonoBehaviour
             }
         }
 
-        Debug.Log("CanRaycastToEnd value: " + fitnessValue);
+        //Debug.Log("CanRaycastToEnd value: " + fitnessValue);
         return fitnessValue;
     }
 

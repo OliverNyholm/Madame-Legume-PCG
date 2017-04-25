@@ -44,6 +44,35 @@ public class EvolutionManager : MonoBehaviour
 
     }
 
+    public void SaveLevelToTxt(int index)
+    {
+        //System.IO.File.WriteAllText("C:/Users/Datorlabbet/Documents/Madame-Legume-PCG/Assets/Levels/LevelTxt/level.txt", 
+        //    generatedLevels[index].LHS + ", " + generatedLevels[index].objectPositions.ToString() + ", " + generatedLevels[index].objectRotations.ToString());
+
+        const string glyphs = "abcdefghijklmnopqrstuvwxyz0123456789"; //add the characters you want
+        string levelID = "";
+        int charAmount = Random.Range(0, glyphs.Length); //set those to the minimum and maximum length of your string
+        for (int i = 0; i < 10; i++)
+        {
+            levelID += glyphs[Random.Range(0, glyphs.Length)];
+        }
+
+        System.IO.StreamWriter saveFile = new System.IO.StreamWriter("C:/Users/Datorlabbet/Documents/Madame-Legume-PCG/Assets/Levels/LevelTxt/level_"+ levelID + ".txt", false);
+
+        saveFile.WriteLine(generatedLevels[index].LHS);
+        saveFile.WriteLine(",");
+        foreach (Vector3 v in generatedLevels[index].objectPositions)
+        {
+            saveFile.WriteLine(v);
+        }
+        saveFile.WriteLine("|");
+        foreach (Quaternion q in generatedLevels[index].objectRotations)
+        {
+            saveFile.WriteLine(q);
+        }
+        saveFile.Close();
+    }
+
     public void InsertLevelData(string LHS, List<GameObject> list, float fitness)
     {
         Level level = new Level();
@@ -98,41 +127,75 @@ public class EvolutionManager : MonoBehaviour
 
     void CreateNewPopulation()
     {
-        generatedLevels.Sort(SortByFitness);
-        generatedLevels.Reverse();
-        generatedLevels.RemoveRange(40, 60); //Save top 2/5 of population
-
         #region Old Tournamentsystem
-        //List<Level> tournamentList = new List<Level>();
-        //while (generatedLevels.Count < populationSize)
-        //{
-        //    for (int i = 0; i < 8; ++i)
-        //    {
-        //        int randomPos = Random.Range(0, oldPopulation.Count);
-        //        tournamentList.Add(oldPopulation[randomPos]); //Adds random element from oldPopulation
-        //    }
+        List<Level> oldPopulation = new List<Level>();
+        oldPopulation.AddRange(generatedLevels);
+        generatedLevels.RemoveRange(10, 90);
+        List<int> tournamentList = new List<int>();
 
-        //    TournamentSelection(ref tournamentList);
+        while (generatedLevels.Count < populationSize)
+        {
+            tournamentList.Clear();
 
-        //    int crossoverChance = 7; //70%
-        //    if (crossoverChance > Random.Range(1, 11))
-        //    {
-        //        OnePointCrossover(tournamentList[0], tournamentList[1]);
-        //    }
-        //    else
-        //    {
-        //        generatedLevels.Add(tournamentList[0]);
-        //        generatedLevels.Add(tournamentList[1]);
-        //    }
-        //}
+            for (int i = 0; i < 8; ++i)
+            {
+                int randomPos = Random.Range(0, oldPopulation.Count);
+                while(tournamentList.Contains(randomPos)) //Stop same level from entering tournament 
+                    randomPos = Random.Range(0, oldPopulation.Count);
+                tournamentList.Add(randomPos); //Adds random element from oldPopulation
+            }
+
+            TournamentSelection(ref tournamentList, ref oldPopulation);
+
+            int crossoverChance = 7; //70%
+            if (crossoverChance > Random.Range(1, 11))
+            {
+                OnePointCrossover(oldPopulation[tournamentList[0]], oldPopulation[tournamentList[1]]);
+                if(tournamentList[0] < tournamentList[1]) //If tournamentlist[1] will move one stpa back after tournamenstlist[0] is deleted
+                {
+                    oldPopulation.Remove(oldPopulation[tournamentList[0]]);
+                    oldPopulation.Remove(oldPopulation[tournamentList[1] - 1]);
+                }
+                else
+                {
+                    oldPopulation.Remove(oldPopulation[tournamentList[0]]);
+                    oldPopulation.Remove(oldPopulation[tournamentList[1]]);
+                }
+
+            }
+            else
+            {
+                generatedLevels.Add(oldPopulation[tournamentList[0]]);
+                generatedLevels.Add(oldPopulation[tournamentList[1]]);
+                if (tournamentList[0] < tournamentList[1])
+                {
+                    oldPopulation.Remove(oldPopulation[tournamentList[0]]);
+                    oldPopulation.Remove(oldPopulation[tournamentList[1] - 1]);
+                }
+                else
+                {
+                    oldPopulation.Remove(oldPopulation[tournamentList[0]]);
+                    oldPopulation.Remove(oldPopulation[tournamentList[1]]);
+                }
+            }
+        }
+        //for (int i = 0; i < 8; i++) //Create 20 new levels each iteration
+        //    geGenerator.GenerateLevel();
         #endregion
 
-        for (int i = 0; i < 40; i += 2) //Adds 4 children per loop. 2 from crossover, and 2 more after crossover and mutation
-            OnePointCrossover(generatedLevels[i], generatedLevels[i + 1]);
+        #region SwitchRegion
+
+        //generatedLevels.Sort(SortByFitness);
+        //generatedLevels.Reverse();
+        //generatedLevels.RemoveRange(40, 60); //Save top 2/5 of population
+
+        //for (int i = 0; i < 40; i += 2) //Adds 4 children per loop. 2 from crossover, and 2 more after crossover and mutation
+        //    OnePointCrossover(generatedLevels[i], generatedLevels[i + 1]);
 
 
-        for (int i = 0; i < 20; i++) //Create 20 new levels each iteration
-            geGenerator.GenerateLevel();
+        //for (int i = 0; i < 20; i++) //Create 20 new levels each iteration
+        //    geGenerator.GenerateLevel();
+        #endregion
     }
 
     //void TwoPointCrossover(Level dad, Level mom)
@@ -254,19 +317,19 @@ public class EvolutionManager : MonoBehaviour
         return child;
     }
 
-    void TournamentSelection(ref List<Level> tournamentPopulation)
+    void TournamentSelection(ref List<int> tournamentPopulation, ref List<Level> oldPopulation)
     {
-        List<Level> semiFinal = new List<Level>();
+        List<int> semiFinal = new List<int>();
 
-        semiFinal.Add(CompareStrongestLevel(tournamentPopulation[0], tournamentPopulation[1])); //Adds4 best to semifinal
-        semiFinal.Add(CompareStrongestLevel(tournamentPopulation[2], tournamentPopulation[3]));
-        semiFinal.Add(CompareStrongestLevel(tournamentPopulation[4], tournamentPopulation[5]));
-        semiFinal.Add(CompareStrongestLevel(tournamentPopulation[6], tournamentPopulation[7]));
+        semiFinal.Add(CompareStrongestLevel(tournamentPopulation[0], tournamentPopulation[1], oldPopulation)); //Adds4 best to semifinal
+        semiFinal.Add(CompareStrongestLevel(tournamentPopulation[2], tournamentPopulation[3], oldPopulation));
+        semiFinal.Add(CompareStrongestLevel(tournamentPopulation[4], tournamentPopulation[5], oldPopulation));
+        semiFinal.Add(CompareStrongestLevel(tournamentPopulation[6], tournamentPopulation[7], oldPopulation));
 
         tournamentPopulation.Clear(); //Clear old list
 
-        tournamentPopulation.Add(CompareStrongestLevel(semiFinal[0], semiFinal[1])); //Add the two best
-        tournamentPopulation.Add(CompareStrongestLevel(semiFinal[2], semiFinal[3]));
+        tournamentPopulation.Add(CompareStrongestLevel(semiFinal[0], semiFinal[1], oldPopulation)); //Add the two best
+        tournamentPopulation.Add(CompareStrongestLevel(semiFinal[2], semiFinal[3], oldPopulation));
     }
 
     Level CompareStrongestLevel(Level first, Level second)
@@ -277,6 +340,19 @@ public class EvolutionManager : MonoBehaviour
             return first;
 
         if (first.fitness > second.fitness)
+            return first;
+
+        return second;
+    }
+
+    int CompareStrongestLevel(int first, int second, List<Level> population)
+    {
+        if (population[first].fitness == 0)
+            return second;
+        if (population[second].fitness == 0)
+            return first;
+
+        if (population[first].fitness > population[second].fitness)
             return first;
 
         return second;
