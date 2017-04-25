@@ -21,6 +21,9 @@ public class ShapeGrammarGenerator : MonoBehaviour
     [SerializeField]
     private int spikeChance;
 
+    [SerializeField]
+    private string levelSaveNumber;
+
     private TileType[][] tiles;
 
     private GameObject start;
@@ -39,6 +42,10 @@ public class ShapeGrammarGenerator : MonoBehaviour
 
     private List<GameObject> instantiatedObjects = new List<GameObject>();
 
+    string fruitLHS;
+    List<Transform> fruitPositions = new List<Transform>();
+    List<Transform> bladetPositions = new List<Transform>();
+
     private List<bool> activePlatforms = new List<bool>();
 
     private int saviour = 0;
@@ -47,6 +54,8 @@ public class ShapeGrammarGenerator : MonoBehaviour
     float rightEdgeX;
     float bottomEdgeY;
     float topEdgeY;
+
+    Level bestLevel = new Level();
 
     // Use this for initialization
     void Start()
@@ -127,6 +136,33 @@ public class ShapeGrammarGenerator : MonoBehaviour
             bool endFound = false;
             CheckPlayabilityWithFruits(instantiatedObjects[0], 0, visitedList, ref endFound);
         }
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            SaveToFile();
+        }
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            List<Transform> tempTransform = ES2.LoadList<Transform>("instantiatedObjects");
+            string tempLHS = ES2.Load<string>("LHS");
+
+            foreach (Transform t in tempTransform)
+            {
+                Debug.Log("Transform: " + t.position);
+            }
+        }
+    }
+
+    private void SaveToFile()
+    {
+        List<Transform> tempTransform = new List<Transform>();
+
+        foreach (GameObject o in instantiatedObjects)
+        {
+            tempTransform.Add(o.transform);
+        }
+
+        ES2.Save(tempTransform, "instantiatedObjects" + levelSaveNumber);
+        ES2.Save(lhs, "LHS" + levelSaveNumber);
     }
 
     static void ClearConsole()
@@ -346,7 +382,7 @@ public class ShapeGrammarGenerator : MonoBehaviour
         List<bool> visitedList = new List<bool>();
         //visitedList.Add(true);
         for (int i = 0; i < usablePlatformsPos.Count; i++)
-            visitedList.Add(false);        
+            visitedList.Add(false);
 
         usablePlatformsPos = usablePlatformsPos.OrderBy(x => Vector2.Distance(usablePlatformsPos[0], x)).ToList();
 
@@ -390,14 +426,17 @@ public class ShapeGrammarGenerator : MonoBehaviour
         if (fruitChoice == "Banana")
         {
             fruitIndex = 0;
+            fruitLHS += "B";
         }
         else if (fruitChoice == "Carrot")
         {
             fruitIndex = 1;
+            fruitLHS += "C";
         }
         else if (fruitChoice == "Tomato")
         {
             fruitIndex = 2;
+            fruitLHS += "T";
         }
 
         currentPos.x -= 1.5f;
@@ -406,6 +445,7 @@ public class ShapeGrammarGenerator : MonoBehaviour
         Vector3 fruitPos = nextPos - (nextPos - currentPos) / 2;
 
         GameObject o = Instantiate(fruits[fruitIndex], fruitPos, fruits[fruitIndex].transform.rotation);
+        fruitPositions.Add(o.transform);
     }
 
     void CheckPlayabilityWithFruits(GameObject next, int index, List<bool> visitedList, ref bool endFound)
@@ -488,7 +528,7 @@ public class ShapeGrammarGenerator : MonoBehaviour
 
             GameObject o = Instantiate(spike, platform.GetComponent<RoomEndPoint>().getSpikePosition(spikePosition).position, platform.GetComponent<RoomEndPoint>().getSpikePosition(spikePosition).rotation);
             lhs = lhs.Insert(lhsPos + 1, "b");
-            //instantiatedObjects.Add(o);
+            instantiatedObjects.Add(o);
             spikeCount++;
             lhsPos++;
             spikePositionsList.Add(spikePosition);
