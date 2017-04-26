@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor;
 using UnityEngine.SceneManagement;
 
 public class GE_LevelGenerator : MonoBehaviour
@@ -61,6 +60,8 @@ public class GE_LevelGenerator : MonoBehaviour
     float rightEdgeX;
     float bottomEdgeY;
     float topEdgeY;
+
+    int runs = 0;
 
     // Use this for initialization
     void Start()
@@ -158,24 +159,7 @@ public class GE_LevelGenerator : MonoBehaviour
         }
 
         if (Input.GetKeyDown(KeyCode.N)) //
-        {
-
-            evolutionManager.ClearLevels();
-            for (int i = 0; i < 500; i++)
-            {
-                GenerateLevel();
-            }
-            foreach (GameObject o in instantiatedObjects)
-            {
-                Destroy(o);
-            }
-            instantiatedObjects.Clear();
-            platformsUsed.Clear();
-
-            populationPos = 0;
-            Level bestLevel = evolutionManager.CreateBestLevel();
-            BuildBestLevel(bestLevel);
-        }
+            ReRun();
 
         if (Input.GetKeyDown(KeyCode.B)) //
         {
@@ -207,12 +191,42 @@ public class GE_LevelGenerator : MonoBehaviour
             if (evolveCount >= evolveSize)
             {
                 isEvolvingLevels = false;
+                evolutionManager.SaveLevelToTxt(0);
+                ReRun();
             }
         }
 
         if (Input.GetKeyDown(KeyCode.X))
             evolutionManager.SaveLevelToTxt(populationPos);
 
+        if(!isEvolvingLevels && runs < 9)
+        {
+            isEvolvingLevels = true;
+            evolveCount = 0;
+            populationPos = 0;
+            runs++;
+        }
+
+
+    }
+
+    void ReRun()
+    {
+        evolutionManager.ClearLevels();
+        for (int i = 0; i < 500; i++)
+        {
+            GenerateLevel();
+        }
+        foreach (GameObject o in instantiatedObjects)
+        {
+            Destroy(o);
+        }
+        instantiatedObjects.Clear();
+        platformsUsed.Clear();
+
+        populationPos = 0;
+        Level bestLevel = evolutionManager.CreateBestLevel();
+        BuildBestLevel(bestLevel);
     }
 
     static void ClearConsole()
@@ -631,18 +645,18 @@ public class GE_LevelGenerator : MonoBehaviour
     /// <param name="visitedList">List checking which locations have been visited previously</param>
     /// <param name="endFound">Reference bool checking if end has been found</param>
     /// <returns>Return 1 if endFound, else 0</returns>
-    bool CheckPlayabilityFindEndWithoutFruits(GameObject next, List<bool> visitedList, ref bool endFound)
+    float CheckPlayabilityFindEndWithoutFruits(GameObject next, List<bool> visitedList, ref bool endFound)
     {
         if (next.tag == "Start") //Checks to see if the player can move from startPosition
             if (!next.GetComponentInChildren<RaycastPlayabilityStartPoint>().checkStartPossible())
-                return true; //return true as if the map is shit :)
+                return 0.1f; //return true as if the map is shit :)
 
         GameObject current = next;
 
         for (int i = instantiatedObjects.Count - 1; i > 0; i--) //Gå bakåt i loopen, för att kolla om man kommer åt endpos direkt
         {
             if (endFound)
-                return true;
+                return 1;
 
             if (instantiatedObjects[i].tag != "Blade" && instantiatedObjects[i].tag != "Fruit" && !visitedList[i] && current.GetComponentInChildren<RaycastPlayability>().isRayHittingPlatform(instantiatedObjects[i]))
             {
@@ -653,7 +667,7 @@ public class GE_LevelGenerator : MonoBehaviour
                     {
                         Debug.Log("Found End Box without vegetables");
                         endFound = true;
-                        return true;
+                        return 1;
 
                     }
                     continue;
@@ -662,7 +676,7 @@ public class GE_LevelGenerator : MonoBehaviour
                 CheckPlayabilityFindEndWithoutFruits(instantiatedObjects[i], visitedList, ref endFound);
 
                 if (endFound)
-                    return true;
+                    return 1;
 
                 instantiatedObjects[i].GetComponentInChildren<RaycastPlayability>().isCheckingPlayability = false; //stops drawing
                 visitedList[i] = false; //Reset position if previous path didn't find end
@@ -670,8 +684,8 @@ public class GE_LevelGenerator : MonoBehaviour
         }
 
         if (endFound)
-            return true;
-        return false;
+            return 1;
+        return 2;
     }
 
     /// <summary>
@@ -875,7 +889,8 @@ public class GE_LevelGenerator : MonoBehaviour
         visited[0] = true;
 
 
-        if (CheckPlayabilityFindEndWithoutFruits(instantiatedObjects[0], visited, ref endFound))
+        float playableWithoutFruit = CheckPlayabilityFindEndWithoutFruits(instantiatedObjects[0], visited, ref endFound);
+        if (playableWithoutFruit < 1.1f) //if not playable with fruit
         {
             for (int i = 1; i < visited.Count; i++) //reset list
             {
@@ -884,8 +899,9 @@ public class GE_LevelGenerator : MonoBehaviour
                     instantiatedObjects[i].SetActive(true);
             }
 
-            Debug.Log("Total fitness: " + 30);
-            return 30; //return ok value, incase level would want to be modified manually.
+            float fitnessResult = 30 * playableWithoutFruit;
+            Debug.Log("Total fitness: " + fitnessResult);
+            return fitnessResult; //return ok value, incase level would want to be modified manually.
         }
 
         for (int i = 1; i < visited.Count; i++) //reset list
@@ -991,8 +1007,8 @@ public class GE_LevelGenerator : MonoBehaviour
         InstantiateVerticalOuterWall(rightEdgeX, bottomEdgeY, topEdgeY);
 
         // Instantiate both horizontal walls, these are one in left and right from the outer walls.
-        InstantiateHorizontalOuterWall(leftEdgeX + 1f, rightEdgeX - 1f, bottomEdgeY);
-        InstantiateHorizontalOuterWall(leftEdgeX + 1f, rightEdgeX - 1f, topEdgeY);
+        InstantiateHorizontalOuterWall(leftEdgeX + 1f, rightEdgeX - 1f, bottomEdgeY, true);
+        InstantiateHorizontalOuterWall(leftEdgeX + 1f, rightEdgeX - 1f, topEdgeY, false);
     }
 
     void InstantiateVerticalOuterWall(float xCoord, float startingY, float endingY)
@@ -1010,7 +1026,7 @@ public class GE_LevelGenerator : MonoBehaviour
         }
     }
 
-    void InstantiateHorizontalOuterWall(float startingX, float endingX, float yCoord)
+    void InstantiateHorizontalOuterWall(float startingX, float endingX, float yCoord, bool blades)
     {
         // Start the loop at the starting value for X.
         float currentX = startingX;
@@ -1020,7 +1036,10 @@ public class GE_LevelGenerator : MonoBehaviour
         {
             // ... instantiate an outer wall tile at the y coordinate and the current x coordinate.
             InstantiateFromArray(frames, currentX, yCoord);
-
+            if (blades)
+            {
+                GameObject bladeInstance = Instantiate(spike, new Vector3(currentX, yCoord + 1, 0), Quaternion.Euler(0, 0, -90), boardHolder.transform) as GameObject;
+            }
             currentX++;
         }
     }

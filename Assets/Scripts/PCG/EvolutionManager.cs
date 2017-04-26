@@ -57,7 +57,7 @@ public class EvolutionManager : MonoBehaviour
             levelID += glyphs[Random.Range(0, glyphs.Length)];
         }
 
-        System.IO.StreamWriter saveFile = new System.IO.StreamWriter("C:/Users/Datorlabbet/Documents/Madame-Legume-PCG/Assets/Levels/LevelTxt/level_"+ levelID + ".txt", false);
+        System.IO.StreamWriter saveFile = new System.IO.StreamWriter(Application.dataPath + "/Levels/LevelTxt/level_" + levelID + ".txt", false);
 
         saveFile.WriteLine(generatedLevels[index].LHS);
         saveFile.WriteLine(",");

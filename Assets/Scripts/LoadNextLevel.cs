@@ -2,7 +2,8 @@
 using System.Collections;
 using UnityEngine.SceneManagement;
 
-public class LoadNextLevel : MonoBehaviour {
+public class LoadNextLevel : MonoBehaviour
+{
 
     [SerializeField]
     private string nextScene;
@@ -12,7 +13,13 @@ public class LoadNextLevel : MonoBehaviour {
         if (col.gameObject.name == "Player")
         {
             ClearConsole();
-            SceneManager.LoadScene(nextScene);
+            if (nextScene == "PCGLevel")
+            {
+                Scene scene = SceneManager.GetActiveScene();
+                SceneManager.LoadScene(scene.name);
+            }
+            else
+                SceneManager.LoadScene(nextScene);
         }
     }
 

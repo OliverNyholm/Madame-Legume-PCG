@@ -165,7 +165,7 @@ public class PlayerController : MonoBehaviour
         }
         #endregion
 
-        // ----------- If vegetable visible, hide it. -----------
+        // ----------- If vegetable visible, hide it with right click. -----------
         #region Right Mouse
         if (Input.GetKeyDown(KeyCode.Mouse1))
         {
@@ -195,7 +195,7 @@ public class PlayerController : MonoBehaviour
         #endregion
     }
 
-    void setUpVegetables()
+    public void setUpVegetables()
     {
         vegetableCount = new int[3];
         vegetableCount[0] = levelData.carrots;
