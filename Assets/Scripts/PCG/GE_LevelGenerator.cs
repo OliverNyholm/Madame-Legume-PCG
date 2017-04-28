@@ -77,7 +77,7 @@ public class GE_LevelGenerator : MonoBehaviour
         populationSize = 100;
         populationPos = 0;
         evolveCount = 0;
-        evolveSize = 2;
+        evolveSize = 100;
         widthOffset = platforms[1].GetComponent<RoomEndPoint>().GetObjectWidth();
         heightOffset = platforms[2].GetComponent<RoomEndPoint>().GetObjectHeight();
         InstantiateOuterWalls();
@@ -213,7 +213,7 @@ public class GE_LevelGenerator : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.X))
             evolutionManager.SaveLevelToTxt(populationPos);
 
-        if(!isEvolvingLevels && runs < 3)
+        if(!isEvolvingLevels && runs < 4)
         {
             isEvolvingLevels = true;
             evolveCount = 0;
@@ -422,7 +422,7 @@ public class GE_LevelGenerator : MonoBehaviour
         platformsUsed.Clear();
 
         Debug.Log(bestLevel.LHS);
-
+        int previousParent = 0;
         for (int i = 0; i < bestLevel.LHS.Length; i++)
         {
             if (bestLevel.LHS[i] == 'S')
@@ -437,17 +437,19 @@ public class GE_LevelGenerator : MonoBehaviour
             {
                 GameObject o = Instantiate(platforms[1], bestLevel.objectPositions[i], platforms[1].transform.rotation);
                 instantiatedObjects.Add(o);
+                previousParent = i;
 
             }
             if (bestLevel.LHS[i] == '2')
             {
                 GameObject o = Instantiate(platforms[2], bestLevel.objectPositions[i], platforms[2].transform.rotation);
                 instantiatedObjects.Add(o);
+                previousParent = i;
 
             }
             if (bestLevel.LHS[i] == 'b') //blade
             {
-                GameObject o = Instantiate(spike, bestLevel.objectPositions[i], bestLevel.objectRotations[i]);
+                GameObject o = Instantiate(spike, bestLevel.objectPositions[i], bestLevel.objectRotations[i], instantiatedObjects[previousParent].transform);
                 instantiatedObjects.Add(o);
             }
             #endregion
@@ -498,6 +500,7 @@ public class GE_LevelGenerator : MonoBehaviour
         platformsUsed.Clear();
 
         Level individual = candidate;
+        int previousParent = 0;
 
         for (int i = 0; i < individual.LHS.Length; i++)
         {
@@ -513,17 +516,19 @@ public class GE_LevelGenerator : MonoBehaviour
             {
                 GameObject o = Instantiate(platforms[1], individual.objectPositions[i], platforms[1].transform.rotation);
                 instantiatedObjects.Add(o);
+                previousParent = i;
 
             }
             if (individual.LHS[i] == '2')
             {
                 GameObject o = Instantiate(platforms[2], individual.objectPositions[i], platforms[2].transform.rotation);
                 instantiatedObjects.Add(o);
+                previousParent = i;
 
             }
             if (individual.LHS[i] == 'b') //blade
             {
-                GameObject o = Instantiate(spike, individual.objectPositions[i], individual.objectRotations[i]);
+                GameObject o = Instantiate(spike, individual.objectPositions[i], individual.objectRotations[i], instantiatedObjects[previousParent].transform);
                 instantiatedObjects.Add(o);
             }
             #endregion
@@ -584,7 +589,7 @@ public class GE_LevelGenerator : MonoBehaviour
             while (spikePositionsList.Contains(spikePosition))
                 spikePosition = Random.Range(0, 14);
 
-            GameObject o = Instantiate(spike, platform.GetComponent<RoomEndPoint>().getSpikePosition(spikePosition).position, platform.GetComponent<RoomEndPoint>().getSpikePosition(spikePosition).rotation);
+            GameObject o = Instantiate(spike, platform.GetComponent<RoomEndPoint>().getSpikePosition(spikePosition).position, platform.GetComponent<RoomEndPoint>().getSpikePosition(spikePosition).rotation, platform.transform);
             instantiatedObjects.Add(o);
             lhs = lhs.Insert(lhsPos + 1, "b");
 

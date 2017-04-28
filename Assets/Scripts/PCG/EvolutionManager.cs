@@ -140,7 +140,7 @@ public class EvolutionManager : MonoBehaviour
             for (int i = 0; i < 8; ++i)
             {
                 int randomPos = Random.Range(0, oldPopulation.Count);
-                while(tournamentList.Contains(randomPos)) //Stop same level from entering tournament 
+                while (tournamentList.Contains(randomPos)) //Stop same level from entering tournament 
                     randomPos = Random.Range(0, oldPopulation.Count);
                 tournamentList.Add(randomPos); //Adds random element from oldPopulation
             }
@@ -151,7 +151,7 @@ public class EvolutionManager : MonoBehaviour
             if (crossoverChance > Random.Range(1, 11))
             {
                 OnePointCrossover(oldPopulation[tournamentList[0]], oldPopulation[tournamentList[1]]);
-                if(tournamentList[0] < tournamentList[1]) //If tournamentlist[1] will move one stpa back after tournamenstlist[0] is deleted
+                if (tournamentList[0] < tournamentList[1]) //If tournamentlist[1] will move one stpa back after tournamenstlist[0] is deleted
                 {
                     oldPopulation.Remove(oldPopulation[tournamentList[0]]);
                     oldPopulation.Remove(oldPopulation[tournamentList[1] - 1]);
@@ -365,6 +365,7 @@ public class EvolutionManager : MonoBehaviour
 
         if (mutationChance >= randomInt) //Move random object
         {
+            #region Move one platform +- 3 in x and y
             int randomObject = Random.Range(0, child.objectPositions.Count);
             while (child.LHS[randomObject] == 'b')
                 randomObject = Random.Range(0, child.objectPositions.Count);
@@ -379,6 +380,19 @@ public class EvolutionManager : MonoBehaviour
             Vector3 randomPos = new Vector3(Random.Range(0, 6) - 3, Random.Range(0, 6) - 3);
             for (int i = 0; i < range; ++i)
                 child.objectPositions[randomObject + i] += randomPos;
+            #endregion
+
+            #region Switch position of two platforms
+            int platform1 = Random.Range(1, child.LHS.Length);
+            int platform2 = Random.Range(1, child.LHS.Length);
+            if (platform2 == platform1)
+                platform2 = Random.Range(1, child.LHS.Length);
+
+            Vector3 tempPos = child.objectPositions[platform1];
+
+            child.objectPositions[platform1] = child.objectPositions[platform2];
+            child.objectPositions[platform1] = tempPos;
+            #endregion
         }
 
         #region Add/Remove fruits and platforms
