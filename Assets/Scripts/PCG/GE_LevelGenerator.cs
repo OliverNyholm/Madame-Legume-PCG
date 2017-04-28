@@ -77,7 +77,7 @@ public class GE_LevelGenerator : MonoBehaviour
         populationSize = 100;
         populationPos = 0;
         evolveCount = 0;
-        evolveSize = 100;
+        evolveSize = 2;
         widthOffset = platforms[1].GetComponent<RoomEndPoint>().GetObjectWidth();
         heightOffset = platforms[2].GetComponent<RoomEndPoint>().GetObjectHeight();
         InstantiateOuterWalls();
@@ -191,7 +191,21 @@ public class GE_LevelGenerator : MonoBehaviour
             if (evolveCount >= evolveSize)
             {
                 isEvolvingLevels = false;
-                evolutionManager.SaveLevelToTxt(0);
+
+                //----- build best level to remove unused fruits
+                bool endFound = false;
+                List<bool> visited = new List<bool>();
+                for (int i = 0; i < instantiatedObjects.Count; i++)
+                    visited.Add(false);
+                visited[0] = true;
+
+                Level levelToSave = evolutionManager.GetLevel(0);
+                BuildBestLevel(levelToSave);
+                CheckPlayabilityWithFruits(instantiatedObjects[0], visited, ref endFound);
+                RemoveUnusedVegetables(visited);
+                evolutionManager.InsertLevelData(lhs, instantiatedObjects, fitness);
+                //save level to textfile
+                evolutionManager.SaveLevelToTxt(100);
                 ReRun();
             }
         }
@@ -199,7 +213,7 @@ public class GE_LevelGenerator : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.X))
             evolutionManager.SaveLevelToTxt(populationPos);
 
-        if(!isEvolvingLevels && runs < 9)
+        if(!isEvolvingLevels && runs < 3)
         {
             isEvolvingLevels = true;
             evolveCount = 0;
@@ -808,6 +822,29 @@ public class GE_LevelGenerator : MonoBehaviour
         Debug.Log("CheckVegetablesUsed fitness: " + (100 * returnValue) + "      Vegetables used: " + vegetablesUsed);
 
         return returnValue;
+    }
+
+    /// <summary>
+    /// Vegetables not used are removed
+    /// </summary>
+    /// <param name="visitedList"></param>
+    /// <returns>+1 * vegetables used</returns>
+    void RemoveUnusedVegetables(List<bool> visitedList)
+    {
+        for (int i = 0; i < instantiatedObjects.Count; i++)
+        {
+            if (instantiatedObjects[i].tag == "Fruit")
+            {
+                if (!visitedList[i])
+                {
+                    Destroy(instantiatedObjects[i]); //Removes unused vegetables
+                    instantiatedObjects.RemoveAt(i);
+                    visitedList.RemoveAt(i);
+                    lhs = lhs.Remove(i, 1);
+                    i--;
+                }
+            }
+        }
     }
 
     /// <summary>

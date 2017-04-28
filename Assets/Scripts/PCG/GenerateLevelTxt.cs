@@ -155,6 +155,7 @@ public class GenerateLevelTxt : MonoBehaviour
             isVegetablesSetUp = true;
         }
     }
+
     void BuildBestLevel()
     {
         for (int i = 0; i < lhs.Length; i++)
@@ -201,8 +202,6 @@ public class GenerateLevelTxt : MonoBehaviour
             {
                 GameObject o = Instantiate(platforms[3], objectPositions[i], platforms[3].transform.rotation);
             }
-
-
         }
     }
 
