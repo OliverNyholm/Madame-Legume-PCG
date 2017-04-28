@@ -10,15 +10,15 @@ public class FallDownDeath : MonoBehaviour
 
     void Start()
     {
-        //player = GameObject.Find("Player").GetComponent<PlayerController>();
-        //startPosition = player.transform.position;
+        player = GameObject.Find("Player").GetComponent<PlayerController>();
+        startPosition = player.transform.position;
 
-        if (GameObject.Find("CoolGELevel"))
-        {
-            levelGen = GameObject.Find("CoolGELevel").GetComponent<GE_LevelGenerator>();
-            startPosition = levelGen.GetStartPosition();
-            
-        }
+        //if (GameObject.Find("CoolGELevel"))
+        //{
+        //    levelGen = GameObject.Find("CoolGELevel").GetComponent<GE_LevelGenerator>();
+        //    startPosition = levelGen.GetStartPosition();
+
+        //}
     }
 
     void OnCollisionEnter2D(Collision2D col)
