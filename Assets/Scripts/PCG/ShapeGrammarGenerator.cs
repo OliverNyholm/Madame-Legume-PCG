@@ -161,8 +161,20 @@ public class ShapeGrammarGenerator : MonoBehaviour
             tempTransform.Add(o.transform);
         }
 
-        ES2.Save(tempTransform, "instantiatedObjects" + levelSaveNumber);
-        ES2.Save(lhs, "LHS" + levelSaveNumber);
+        try
+        {
+            ES2.Save(tempTransform, "instantiatedObjects" + levelSaveNumber);
+            ES2.Save(lhs, "LHS" + levelSaveNumber);
+            ES2.Save(fruitLHS, "fruitLHS" + levelSaveNumber);
+            ES2.Save(activePlatforms, "activePlatforms" + levelSaveNumber);
+
+            Debug.Log("Save successful");
+        }
+        catch (System.Exception)
+        {
+            Debug.Log("Save failed");
+            throw;
+        }
     }
 
     static void ClearConsole()
@@ -294,6 +306,7 @@ public class ShapeGrammarGenerator : MonoBehaviour
         {
             if (Random.Range(0, 11) < 5)
                 AddSpikes(o, 0, new List<int>(), i);
+
             activePlatforms.Add(true);
             return false;
         }
@@ -529,6 +542,7 @@ public class ShapeGrammarGenerator : MonoBehaviour
             GameObject o = Instantiate(spike, platform.GetComponent<RoomEndPoint>().getSpikePosition(spikePosition).position, platform.GetComponent<RoomEndPoint>().getSpikePosition(spikePosition).rotation);
             lhs = lhs.Insert(lhsPos + 1, "b");
             instantiatedObjects.Add(o);
+            activePlatforms.Add(true);
             spikeCount++;
             lhsPos++;
             spikePositionsList.Add(spikePosition);
