@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 public class LoadTestLevel : MonoBehaviour
@@ -34,15 +35,22 @@ public class LoadTestLevel : MonoBehaviour
         InstantiateOuterWalls();
         LoadLevel();
         BuildLevel();
+
     }
 
     void LoadLevel()
     {
-        instantiateTransform = ES2.LoadList<Transform>("instantiatedObjects" + levelToLoad);
-        lhs = ES2.Load<string>("LHS" + levelToLoad);
-        fruitLHS = ES2.Load<string>("fruitLHS" + levelToLoad);
-        activePlatforms = ES2.LoadList<bool>("activePlatforms" + levelToLoad);
-        Debug.Log(lhs);
+#if UNITY_EDITOR
+        instantiateTransform = ES2.LoadList<Transform>("C:/Users/Peter/Documents/Madame-Legume-PCG/instantiatedObjects" + levelToLoad);
+        lhs = ES2.Load<string>("C:/Users/Peter/Documents/Madame-Legume-PCG/LHS" + levelToLoad);
+        fruitLHS = ES2.Load<string>("C:/Users/Peter/Documents/Madame-Legume-PCG/fruitLHS" + levelToLoad);
+        activePlatforms = ES2.LoadList<bool>("C:/Users/Peter/Documents/Madame-Legume-PCG/activePlatforms" + levelToLoad);
+#else
+        instantiateTransform = ES2.LoadList<Transform>(Application.dataPath + "/instantiatedObjects" + levelToLoad);
+        lhs = ES2.Load<string>(Application.dataPath + "/LHS" + levelToLoad);
+        fruitLHS = ES2.Load<string>(Application.dataPath + "/fruitLHS" + levelToLoad);
+        activePlatforms = ES2.LoadList<bool>(Application.dataPath + "/activePlatforms" + levelToLoad);
+#endif
     }
 
     void BuildLevel()
@@ -111,7 +119,7 @@ public class LoadTestLevel : MonoBehaviour
         }
     }
 
-    #region OuterWallInstantiations
+#region OuterWallInstantiations
     void InstantiateOuterWalls()
     {
         boardHolder = new GameObject("BoardHolder");
@@ -180,6 +188,6 @@ public class LoadTestLevel : MonoBehaviour
         // Set the tile's parent to the board holder.
         tileInstance.transform.parent = boardHolder.transform;
     }
-    #endregion
+#endregion
 
 }
