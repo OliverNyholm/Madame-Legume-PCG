@@ -115,7 +115,8 @@ public class LoadTestLevel : MonoBehaviour
     void InstantiateOuterWalls()
     {
         boardHolder = new GameObject("BoardHolder");
-        width = height = 45;
+        width = 30;
+        height = 25;
 
         // The outer walls are one unit left, right, up and down from the board.
         leftEdgeX = transform.position.x - (platforms[0].GetComponentInChildren<SpriteRenderer>().bounds.size.x / 2) - (frames[0].GetComponent<SpriteRenderer>().bounds.size.x / 2);
