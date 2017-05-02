@@ -77,7 +77,7 @@ public class GE_LevelGenerator : MonoBehaviour
         populationSize = 100;
         populationPos = 0;
         evolveCount = 0;
-        evolveSize = 100;
+        evolveSize = 20;
         widthOffset = platforms[1].GetComponent<RoomEndPoint>().GetObjectWidth();
         heightOffset = platforms[2].GetComponent<RoomEndPoint>().GetObjectHeight();
         InstantiateOuterWalls();
@@ -186,7 +186,7 @@ public class GE_LevelGenerator : MonoBehaviour
         {
             evolveCount++;
             EvolveLevels();
-            Debug.Log("Evolve Count: " + evolveCount + "/" + evolveSize);
+            Debug.Log("Evolve Count: " + evolveCount + "/" + evolveSize + "       run: " + runs);
 
             if (evolveCount >= evolveSize)
             {
@@ -213,7 +213,7 @@ public class GE_LevelGenerator : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.X))
             evolutionManager.SaveLevelToTxt(populationPos);
 
-        if(!isEvolvingLevels && runs < 4)
+        if(!isEvolvingLevels && runs < 20)
         {
             isEvolvingLevels = true;
             evolveCount = 0;
@@ -965,7 +965,7 @@ public class GE_LevelGenerator : MonoBehaviour
 
         float fitness = playability + vegetablesUsed + heightPosition + distance + endInSight + vegetablesColliding;
         Debug.Log("Total Fitness: " + fitness + "   Playability: " + playability + "   Vegetables Used: " + vegetablesUsed + "   Height position: " + heightPosition +
-            "   Distance: " + distance + "   EndInSight: " + endInSight + /*"   Needed platforms: " + neededPlatforms + */"   Vegetables Colliding: " + vegetablesColliding);
+            "   Distance: " + distance + "   EndInSight: " + endInSight +/* "   Needed platforms: " + neededPlatforms +*/ "   Vegetables Colliding: " + vegetablesColliding);
         //float fitness = 200 * CheckPlayabilityWithFruits(instantiatedObjects[0], visited, ref endFound);
         //+ 10 * CheckAmountofBlades();
 
