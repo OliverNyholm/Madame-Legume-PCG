@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 public class LoadTestLevel : MonoBehaviour
@@ -34,15 +35,22 @@ public class LoadTestLevel : MonoBehaviour
         InstantiateOuterWalls();
         LoadLevel();
         BuildLevel();
+
     }
 
     void LoadLevel()
     {
+#if UNITY_EDITOR
         instantiateTransform = ES2.LoadList<Transform>("instantiatedObjects" + levelToLoad);
         lhs = ES2.Load<string>("LHS" + levelToLoad);
         fruitLHS = ES2.Load<string>("fruitLHS" + levelToLoad);
         activePlatforms = ES2.LoadList<bool>("activePlatforms" + levelToLoad);
-        Debug.Log(lhs);
+#else
+        instantiateTransform = ES2.LoadList<Transform>(Application.dataPath + "/instantiatedObjects" + levelToLoad);
+        lhs = ES2.Load<string>(Application.dataPath + "/LHS" + levelToLoad);
+        fruitLHS = ES2.Load<string>(Application.dataPath + "/fruitLHS" + levelToLoad);
+        activePlatforms = ES2.LoadList<bool>(Application.dataPath + "/activePlatforms" + levelToLoad);
+#endif
     }
 
     void BuildLevel()
@@ -111,11 +119,12 @@ public class LoadTestLevel : MonoBehaviour
         }
     }
 
-    #region OuterWallInstantiations
+#region OuterWallInstantiations
     void InstantiateOuterWalls()
     {
         boardHolder = new GameObject("BoardHolder");
-        width = height = 45;
+        width = 30;
+        height = 25;
 
         // The outer walls are one unit left, right, up and down from the board.
         leftEdgeX = transform.position.x - (platforms[0].GetComponentInChildren<SpriteRenderer>().bounds.size.x / 2) - (frames[0].GetComponent<SpriteRenderer>().bounds.size.x / 2);
@@ -179,6 +188,6 @@ public class LoadTestLevel : MonoBehaviour
         // Set the tile's parent to the board holder.
         tileInstance.transform.parent = boardHolder.transform;
     }
-    #endregion
+#endregion
 
 }

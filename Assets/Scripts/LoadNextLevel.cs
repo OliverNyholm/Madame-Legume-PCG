@@ -8,18 +8,32 @@ public class LoadNextLevel : MonoBehaviour
     [SerializeField]
     private string nextScene;
 
-    void OnCollisionEnter2D(Collision2D col)
+    private Scene activeScene;
+
+    private void Awake()
     {
-        if (col.gameObject.name == "Player")
+        activeScene = SceneManager.GetActiveScene();
+    }
+
+    void OnTriggerEnter2D(Collider2D col)
+    {
+        if (col.gameObject.tag == "Player")
         {
+#if UNITY_EDITOR
             ClearConsole();
+#endif
             if (nextScene == "PCGLevel")
             {
-                Scene scene = SceneManager.GetActiveScene();
-                SceneManager.LoadScene(scene.name);
+                //Scene scene = SceneManager.GetActiveScene();
+                //SceneManager.LoadScene(scene.name);
+                SceneManager.LoadScene(activeScene.buildIndex + 1);
             }
             else
-                SceneManager.LoadScene(nextScene);
+            {
+                int nextBuildScene = SceneManager.GetActiveScene().buildIndex + 1;
+
+                SceneManager.LoadScene(nextBuildScene);
+            }
         }
     }
 

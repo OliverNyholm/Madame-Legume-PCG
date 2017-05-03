@@ -60,7 +60,8 @@ public class ShapeGrammarGenerator : MonoBehaviour
     void Start()
     {
         boardHolder = new GameObject("BoardHolder");
-        width = height = 45;
+        width = 30;
+        height = 25;
         InstantiateOuterWalls();
         start = Instantiate(platforms[0], new Vector2(0, 0), Quaternion.identity);
         start.GetComponentInChildren<SpriteRenderer>().color = Color.green;
@@ -209,7 +210,7 @@ public class ShapeGrammarGenerator : MonoBehaviour
 
             char previous = i > 0 ? lhs[i - 1] : '2';
 
-            int rhsSelection = i < 10 ? Random.Range(1, rRhs.Length - 2) : rRhs.Length - 1;
+            int rhsSelection = i < 6 ? Random.Range(1, rRhs.Length - 2) : rRhs.Length - 1;
             if (lhs[i] == 'X')
                 rhsSelection = 6;
 
