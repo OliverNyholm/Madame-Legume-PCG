@@ -41,10 +41,10 @@ public class LoadTestLevel : MonoBehaviour
     void LoadLevel()
     {
 #if UNITY_EDITOR
-        instantiateTransform = ES2.LoadList<Transform>("C:/Users/Peter/Documents/Madame-Legume-PCG/instantiatedObjects" + levelToLoad);
-        lhs = ES2.Load<string>("C:/Users/Peter/Documents/Madame-Legume-PCG/LHS" + levelToLoad);
-        fruitLHS = ES2.Load<string>("C:/Users/Peter/Documents/Madame-Legume-PCG/fruitLHS" + levelToLoad);
-        activePlatforms = ES2.LoadList<bool>("C:/Users/Peter/Documents/Madame-Legume-PCG/activePlatforms" + levelToLoad);
+        instantiateTransform = ES2.LoadList<Transform>("instantiatedObjects" + levelToLoad);
+        lhs = ES2.Load<string>("LHS" + levelToLoad);
+        fruitLHS = ES2.Load<string>("fruitLHS" + levelToLoad);
+        activePlatforms = ES2.LoadList<bool>("activePlatforms" + levelToLoad);
 #else
         instantiateTransform = ES2.LoadList<Transform>(Application.dataPath + "/instantiatedObjects" + levelToLoad);
         lhs = ES2.Load<string>(Application.dataPath + "/LHS" + levelToLoad);
