@@ -49,7 +49,11 @@ public class GenerateLevelTxt : MonoBehaviour
         height = 25;
         objectPositions = new List<Vector3>();
         objectRotations = new List<Quaternion>();
+#if UNITY_EDITOR
         textfile = new System.IO.StreamReader(Application.dataPath + "/Levels/LevelTxt/" + filePath + ".txt");
+#else
+        textfile = new System.IO.StreamReader(Application.dataPath + "/" + filePath + ".txt");
+#endif
         data = textfile.ReadToEnd();
 
         int index = 0;
@@ -165,7 +169,7 @@ public class GenerateLevelTxt : MonoBehaviour
                 GameObject o = Instantiate(platforms[0], objectPositions[i], platforms[0].transform.rotation);
                 startPosition = (objectPositions[i] - new Vector3(platforms[0].GetComponent<RoomEndPoint>().GetObjectWidth() / 2, 0) + new Vector3(1, 1, 0));
             }
-            #region Platforms
+#region Platforms
             if (lhs[i] == '1')
             {
                 GameObject o = Instantiate(platforms[1], objectPositions[i], platforms[1].transform.rotation);
@@ -180,9 +184,9 @@ public class GenerateLevelTxt : MonoBehaviour
             {
                 GameObject o = Instantiate(spike, objectPositions[i], objectRotations[i]);
             }
-            #endregion
+#endregion
 
-            #region Fruits
+#region Fruits
             if (lhs[i] == 'C')
             {
                 carrots++;
@@ -196,7 +200,7 @@ public class GenerateLevelTxt : MonoBehaviour
             {
                 bananas++;
             }
-            #endregion
+#endregion
 
             if (lhs[i] == 'E')
             {
